@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 from bedjet import BedJet, BEDJET_COMMANDS
 import sys
 from config import MQTT, MAC_ADDRESSES
+import asyncio
 
 client = mqtt.Client()
 client.username_pw_set(username=MQTT['user'], password=MQTT['password'])
@@ -47,4 +48,4 @@ async def main():
     except KeyboardInterrupt:
         sys.exit(0)
 
-main()
+asyncio.run(main())
