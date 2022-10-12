@@ -11,7 +11,8 @@ client.subscribe("bedjet/#")
 
 bedjets = {}
 for mac in MAC_ADDRESSES:
-    bedjets[mac] = BedJet(mac)
+    bedjet = BedJet(mac)
+    bedjets[mac] = bedjet
 
 
 def on_message(client, userdata, message):
@@ -35,8 +36,15 @@ def on_message(client, userdata, message):
 
 client.on_message = on_message
 
-try:
-    print('running')
-    client.loop_forever()
-except KeyboardInterrupt:
-    sys.exit(0)
+
+async def main():
+    try:
+        for mac, bedjet in bedjets.items():
+            await bedjet.connect()
+            await bedjet.subscribe()
+        print('running')
+        client.loop_forever()
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+main()
