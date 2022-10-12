@@ -5,13 +5,13 @@ import sys
 from config import MQTT, MAC_ADDRESSES
 
 client = mqtt.Client()
-client.username_pw_set(username=MQTT.user, password=MQTT.password)
-client.connect(MQTT.host, MQTT.port, 60)
+client.username_pw_set(username=MQTT['user'], password=MQTT['password'])
+client.connect(MQTT['host'], MQTT['port'], 60)
 client.subscribe("bedjet/#")
 
-bedjets = {
-    bedjetMac: BedJet(bedjetMac)
-}
+bedjets = {}
+for mac in MAC_ADDRESSES:
+    bedjets[mac] = BedJet(mac)
 
 
 def on_message(client, userdata, message):
