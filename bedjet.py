@@ -119,9 +119,6 @@ class BedJet():
             self.hvac_mode = "heat"
             self.preset_mode = "ext_ht"
 
-        print(self.current_temperature)
-        print(self.hvac_mode)
-
     async def subscribe(self):
         return await self._client.start_notify(
             BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
@@ -160,8 +157,8 @@ class BedJet():
         await self.send_command([0x03, temp_byte])
 
     async def set_hvac_mode(self, hvac_mode):
-        await self.set_mode(BEDJET_COMMANDS[hvac_mode])
+        await self.set_mode(BEDJET_COMMANDS.get(hvac_mode))
         await self.set_time(600)
 
     async def set_preset_mode(self, preset_mode):
-        await self.set_mode(BEDJET_COMMANDS[preset_mode])
+        await self.set_mode(BEDJET_COMMANDS.get(preset_mode))
