@@ -16,7 +16,7 @@ for mac in MAC_ADDRESSES:
     bedjets[mac] = bedjet
 
 
-def on_message(client, userdata, message):
+async def on_message(client, userdata, message):
     print(message)
     splittopic = message.topic.split('/')
     mac = splittopic[1]
@@ -26,13 +26,13 @@ def on_message(client, userdata, message):
     bedjet = bedjets[mac]
 
     if command_type == 'setmode':
-        bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
+        await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
     if command_type == 'set_temp':
-        bedjet.set_temp(command_value)
+        await bedjet.set_temp(command_value)
 
     if command_type == 'set_fan':
-        bedjet.set_fan_mode(command_value)
+        await bedjet.set_fan_mode(command_value)
 
 
 client.on_message = on_message
