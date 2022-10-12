@@ -22,7 +22,8 @@ async def test():
         async with client.filtered_messages('bedjet/#') as messages:
             await client.subscribe('bedjet/#')
             async for message in messages:
-                print(message)
+                print(message.topic)
+                print(message.payload.decode())
                 splittopic = message.topic.split('/')
                 mac = splittopic[1]
                 command_type = splittopic[2]
