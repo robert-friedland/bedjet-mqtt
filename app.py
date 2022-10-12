@@ -26,7 +26,7 @@ def on_message(client, userdata, message):
     bedjet = bedjets[mac]
 
     if command_type == 'setmode':
-        bedjet.set_mode(BEDJET_COMMANDS(command_value))
+        bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
     if command_type == 'set_temp':
         bedjet.set_temp(command_value)
