@@ -186,7 +186,7 @@ class BedJet():
         await self.send_command([0x07, round(fan_pct/5)-1])
 
     async def set_temperature(self, temperature):
-        temp = int(temperature)
+        temp = round(float(temperature))
         temp_byte = (int((temp - 60) / 9) + (temp - 66)) + 0x26
         await self.send_command([0x03, temp_byte])
 
