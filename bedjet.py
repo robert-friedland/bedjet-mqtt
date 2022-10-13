@@ -65,6 +65,19 @@ class BedJet():
     def mqtt_topic(self):
         return self._mqtt_topic
 
+    @property
+    def fan_mode(self):
+        fan_pct = self.fan_pct or 0
+        if fan_pct <= 10:
+            return 'FAN_MIN'
+        if fan_pct <= 25:
+            return 'FAN_LOW'
+        if fan_pct <= 50:
+            return 'FAN_MEDIUM'
+        if fan_pct <= 75:
+            return 'FAN_HIGH'
+        return 'FAN_MAX'
+
     @current_temperature.setter
     def current_temperature(self, value):
         self._current_temperature = value
@@ -132,6 +145,7 @@ class BedJet():
         await self.publish_mqtt('current-temperature', self.current_temperature)
         await self.publish_mqtt('target-temperature', self.target_temperature)
         await self.publish_mqtt('fan-pct', self.fan_pct)
+        await self.publish_mqtt('fan-mode', self.fan_mode)
         await self.publish_mqtt('hvac-mode', self.hvac_mode)
         await self.publish_mqtt('preset-mode', self.preset_mode)
 

@@ -6,7 +6,7 @@ from config import MQTT, MAC_ADDRESSES
 import asyncio
 
 
-async def test():
+async def run():
     async with Client(
         MQTT['host'],
         username=MQTT['username'],
@@ -32,58 +32,23 @@ async def test():
                     await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
                 if command_type == 'set_temp':
-                    await bedjet.set_temp(command_value)
+                    await bedjet.set_temperature(command_value)
 
                 if command_type == 'set_fan':
                     await bedjet.set_fan_mode(command_value)
-
-# client = mqtt.Client()
-# client.username_pw_set(username=MQTT['user'], password=MQTT['password'])
-# client.connect(MQTT['host'], MQTT['port'], 60)
-# client.subscribe("bedjet/#")
-
-
-# async def on_message(client, userdata, message):
-#     print(message)
-#     splittopic = message.topic.split('/')
-#     mac = splittopic[1]
-#     command_type = splittopic[2]
-#     command_value = message.payload
-
-#     bedjet = bedjets[mac]
-
-#     if command_type == 'setmode':
-#         await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
-
-#     if command_type == 'set_temp':
-#         await bedjet.set_temp(command_value)
-
-#     if command_type == 'set_fan':
-#         await bedjet.set_fan_mode(command_value)
-
-
-# client.on_message = on_message
 
 
 async def main():
     reconnect_interval = 3
     while True:
-        print('loop')
         try:
-            await test()
+            await run()
         except MqttError as error:
             print(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
+        except KeyboardInterrupt:
+            sys.exit(0)
         finally:
             await asyncio.sleep(reconnect_interval)
-
-    # try:
-    #     for mac, bedjet in bedjets.items():
-    #         await bedjet.connect()
-    #         await bedjet.subscribe()
-    #     print('running')
-    #     client.loop_forever()
-    # except KeyboardInterrupt:
-    #     sys.exit(0)
 
 asyncio.run(main())
