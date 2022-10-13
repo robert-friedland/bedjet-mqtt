@@ -45,6 +45,9 @@ async def main():
         except MqttError as error:
             print(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
+        except BleakError as error:
+            print(
+                f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         except KeyboardInterrupt:
             sys.exit(0)
         finally:

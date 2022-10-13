@@ -114,44 +114,73 @@ class BedJet():
         return await self._client.connect()
 
     async def handle_data(self, handle, value):
-        self.current_temperature = round(
-            ((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
-        self.target_temperature = round(
-            ((int(value[8]) - 0x26) + 66) - ((int(value[8]) - 0x26) / 9))
-        self.time = (int(value[4]) * 60 * 60) + \
-            (int(value[5]) * 60) + int(value[6])
-        self.timestring = str(int(value[4])) + ":" + \
-            str(int(value[5])) + ":" + str(int(value[6]))
-        self.fan_pct = int(value[10]) * 5
-        if value[14] == 0x50 and value[13] == 0x14:
-            self.hvac_mode = "off"
-            self.preset_mode = "off"
-        if value[14] == 0x34:
-            self.hvac_mode = "cool"
-            self.preset_mode = "cool"
-        if value[14] == 0x56:
-            self.hvac_mode = "heat"
-            self.preset_mode = "turbo"
-        if value[14] == 0x50 and value[13] == 0x2d:
-            self.hvac_mode = "heat"
-            self.preset_mode = "heat"
-        if value[14] == 0x3e:
-            self.hvac_mode = "dry"
-            self.preset_mode = "dry"
-        if value[14] == 0x43:
-            self.hvac_mode = "heat"
-            self.preset_mode = "ext_ht"
+        def get_current_temperature(value):
+            return round(((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
 
-        await self.publish_mqtt('current-temperature', self.current_temperature)
-        await self.publish_mqtt('target-temperature', self.target_temperature)
-        await self.publish_mqtt('fan-pct', self.fan_pct)
-        await self.publish_mqtt('fan-mode', self.fan_mode)
-        await self.publish_mqtt('hvac-mode', self.hvac_mode)
-        await self.publish_mqtt('preset-mode', self.preset_mode)
+        def get_target_temperature(value):
+            return round(((int(value[8]) - 0x26) + 66) - ((int(value[8]) - 0x26) / 9))
+
+        def get_time(value):
+            return (int(value[4]) * 60 * 60) + (int(value[5]) * 60) + int(value[6])
+
+        def get_timestring(value):
+            return str(int(value[4])) + ":" + str(int(value[5])) + ":" + str(int(value[6]))
+
+        def get_fan_pct(value):
+            return int(value[10]) * 5
+
+        def get_preset_mode(value):
+            if value[14] == 0x50 and value[13] == 0x14:
+                return "off"
+            if value[14] == 0x34:
+                return "cool"
+            if value[14] == 0x56:
+                return "turbo"
+            if value[14] == 0x50 and value[13] == 0x2d:
+                return "heat"
+            if value[14] == 0x3e:
+                return "dry"
+            if value[14] == 0x43:
+                return "ext_ht"
+
+        def get_hvac_mode(value):
+            PRESET_TO_HVAC = {
+                'off': 'off',
+                'cool': 'cool',
+                'turbo': 'heat',
+                'heat': 'heat',
+                'dry': 'dry',
+                'ext_ht': 'heat'
+            }
+
+            return PRESET_TO_HVAC[get_preset_mode(self, value)]
+
+        self.current_temperature = get_current_temperature(value)
+        self.target_temperature = get_target_temperature(value)
+        self.time = get_time(value)
+        self.timestring = get_timestring(value)
+        self.fan_pct = get_fan_pct(value)
+        self.hvac_mode = get_hvac_mode(value)
+        self.preset_mode = get_preset_mode(value)
+
+        await self.update_attributes()
 
     async def publish_mqtt(self, attribute, value):
         payload = value.encode() if not isinstance(value, int) else value
         await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}/state', payload=payload)
+
+    async def update_attributes(self):
+        attributes = [
+            {'topic': 'current-temperature', 'state': self.current_temperature},
+            {'topic': 'target-temperature', 'state': self.target_temperature},
+            {'topic': 'fan-pct', 'state': self.fan_pct},
+            {'topic': 'fan-mode', 'state': self.fan_mode},
+            {'topic': 'hvac-mode', 'state': self.hvac_mode},
+            {'topic': 'preset-mode', 'state': self.preset_mode},
+        ]
+
+        for attribute in attributes:
+            await self.publish_mqtt(attribute['topic'], attribute['state'])
 
     async def subscribe(self):
         return await self._client.start_notify(
