@@ -4,7 +4,7 @@ from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS
 
 
 class BedJet():
-    def __init__(self, mac):
+    def __init__(self, mac, mqtt_client, mqtt_topic):
         self._mac = mac
 
         self._current_temperature = None
@@ -18,6 +18,8 @@ class BedJet():
         self._fan_pct = None
 
         self._client = BleakClient(mac)
+        self._mqtt_client = mqtt_client
+        self._mqtt_topic = mqtt_topic
 
     @property
     def mac(self):
@@ -55,6 +57,14 @@ class BedJet():
     def client(self):
         return self._client
 
+    @property
+    def mqtt_client(self):
+        return self._mqtt_client
+
+    @property
+    def mqtt_topic(self):
+        return self._mqtt_topic
+
     @current_temperature.setter
     def current_temperature(self, value):
         self._current_temperature = value
@@ -90,7 +100,7 @@ class BedJet():
     async def connect(self):
         return await self._client.connect()
 
-    def handle_data(self, handle, value):
+    async def handle_data(self, handle, value):
         self.current_temperature = round(
             ((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
         self.target_temperature = round(
@@ -118,6 +128,15 @@ class BedJet():
         if value[14] == 0x43:
             self.hvac_mode = "heat"
             self.preset_mode = "ext_ht"
+
+        await self.publish_mqtt('current-temperature', self.current_temperature)
+        await self.publish_mqtt('target-temperature', self.target_temperature)
+        await self.publish_mqtt('fan-pct', self.fan_pct)
+        await self.publish_mqtt('hvac-mode', self.hvac_mode)
+        await self.publish_mqtt('preset-mode', self.preset_mode)
+
+    async def publish_mqtt(self, attribute, value):
+        await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}', payload=value.encode())
 
     async def subscribe(self):
         return await self._client.start_notify(

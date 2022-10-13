@@ -7,18 +7,18 @@ import asyncio
 
 
 async def test():
-    bedjets = {}
-    for mac in MAC_ADDRESSES:
-        bedjet = BedJet(mac)
-        bedjets[mac] = bedjet
-        await bedjet.connect()
-        await bedjet.subscribe()
-
     async with Client(
         MQTT['host'],
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
+        bedjets = {}
+        for mac in MAC_ADDRESSES:
+            bedjet = BedJet(mac, client, f'bedjet/{mac}')
+            bedjets[mac] = bedjet
+            await bedjet.connect()
+            await bedjet.subscribe()
+
         async with client.filtered_messages('bedjet/#') as messages:
             await client.subscribe('bedjet/#')
             async for message in messages:
