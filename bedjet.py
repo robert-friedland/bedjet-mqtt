@@ -153,7 +153,7 @@ class BedJet():
                 'ext_ht': 'heat'
             }
 
-            return PRESET_TO_HVAC[get_preset_mode(self, value)]
+            return PRESET_TO_HVAC[get_preset_mode(value)]
 
         self.current_temperature = get_current_temperature(value)
         self.target_temperature = get_target_temperature(value)
