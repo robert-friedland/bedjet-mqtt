@@ -22,8 +22,6 @@ async def test():
         async with client.filtered_messages('bedjet/#') as messages:
             await client.subscribe('bedjet/#')
             async for message in messages:
-                print(message.topic)
-                print(message.payload.decode())
                 splittopic = message.topic.split('/')
                 mac = splittopic[1]
                 command_type = splittopic[2]
@@ -31,7 +29,6 @@ async def test():
                 bedjet = bedjets[mac]
 
                 if command_type == 'setmode':
-                    print(BEDJET_COMMANDS.get(command_value))
                     await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
                 if command_type == 'set_temp':
@@ -71,6 +68,7 @@ async def test():
 async def main():
     reconnect_interval = 3
     while True:
+        print('loop')
         try:
             await test()
         except MqttError as error:
