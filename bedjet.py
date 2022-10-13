@@ -69,14 +69,14 @@ class BedJet():
     def fan_mode(self):
         fan_pct = self.fan_pct or 0
         if fan_pct <= 10:
-            return 'FAN_MIN'
+            return 'min'
         if fan_pct <= 25:
-            return 'FAN_LOW'
+            return 'low'
         if fan_pct <= 50:
-            return 'FAN_MEDIUM'
+            return 'medium'
         if fan_pct <= 75:
-            return 'FAN_HIGH'
-        return 'FAN_MAX'
+            return 'high'
+        return 'max'
 
     @current_temperature.setter
     def current_temperature(self, value):
@@ -169,15 +169,15 @@ class BedJet():
     async def set_fan_mode(self, fan_mode):
         if str(fan_mode).isnumeric():
             fan_pct = int(fan_mode)
-        elif fan_mode == 'FAN_MIN':
+        elif fan_mode == 'min':
             fan_pct = 10
-        elif fan_mode == 'FAN_LOW':
+        elif fan_mode == 'low':
             fan_pct = 25
-        elif fan_mode == 'FAN_MEDIUM':
+        elif fan_mode == 'medium':
             fan_pct = 50
-        elif fan_mode == 'FAN_HIGH':
+        elif fan_mode == 'high':
             fan_pct = 75
-        elif fan_mode == 'FAN_MAX':
+        elif fan_mode == 'max':
             fan_pct = 100
 
         if not (fan_pct >= 0 and fan_pct <= 100):
