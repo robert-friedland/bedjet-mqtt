@@ -1,4 +1,3 @@
-from binascii import hexlify
 from asyncio_mqtt import Client, MqttError
 from bedjet import BedJet, BEDJET_COMMANDS
 import sys
