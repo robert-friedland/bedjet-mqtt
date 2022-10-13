@@ -27,10 +27,11 @@ async def test():
                 splittopic = message.topic.split('/')
                 mac = splittopic[1]
                 command_type = splittopic[2]
-                command_value = message.payload
+                command_value = message.payload.decode()
                 bedjet = bedjets[mac]
 
                 if command_type == 'setmode':
+                    print(BEDJET_COMMANDS.get(command_value))
                     await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
                 if command_type == 'set_temp':
