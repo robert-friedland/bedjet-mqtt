@@ -1,6 +1,6 @@
 import asyncio
 from bleak import BleakClient
-from const import BEDJET__UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_S
+from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS
 
 
 class BedJet():
@@ -123,14 +123,14 @@ class BedJet():
         return await self._client.start_notify(
             BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
 
-    async def send_(self, ):
-        return await self._client.write_gatt_char(BEDJET__UUID, )
+    async def send_command(self, command):
+        return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
     async def set_mode(self, mode):
-        return await self.send_([0x01, mode])
+        return await self.send_command([0x01, mode])
 
     async def set_time(self, minutes):
-        return await self.send_([0x02, minutes // 60, minutes % 60])
+        return await self.send_command([0x02, minutes // 60, minutes % 60])
 
     async def set_fan_mode(self, fan_mode):
         if str(fan_mode).isnumeric():
@@ -149,16 +149,16 @@ class BedJet():
         if not (fan_pct >= 0 and fan_pct <= 100):
             return
 
-        await self.send_([0x07, round(fan_pct/5)-1])
+        await self.send_command([0x07, round(fan_pct/5)-1])
 
     async def set_temperature(self, temperature):
         temp = int(temperature)
         temp_byte = (int((temp - 60) / 9) + (temp - 66)) + 0x26
-        await self.send_([0x03, temp_byte])
+        await self.send_command([0x03, temp_byte])
 
     async def set_hvac_mode(self, hvac_mode):
-        await self.set_mode(BEDJET_S.get(hvac_mode))
+        await self.set_mode(BEDJET_COMMANDS.get(hvac_mode))
         await self.set_time(600)
 
     async def set_preset_mode(self, preset_mode):
-        await self.set_mode(BEDJET_S.get(preset_mode))
+        await self.set_mode(BEDJET_COMMANDS.get(preset_mode))
