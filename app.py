@@ -19,7 +19,7 @@ async def run():
             await bedjet.connect()
             await bedjet.subscribe()
 
-        async with client.filtered_messages('bedjet/#') as messages:
+        async with client.filtered_messages('bedjet/+/+/set') as messages:
             await client.subscribe('bedjet/#')
             async for message in messages:
                 splittopic = message.topic.split('/')
@@ -28,13 +28,13 @@ async def run():
                 command_value = message.payload.decode()
                 bedjet = bedjets[mac]
 
-                if command_type == 'setmode':
+                if command_type == 'hvac-mode':
                     await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
 
-                if command_type == 'set_temp':
+                if command_type == 'target-temperature':
                     await bedjet.set_temperature(command_value)
 
-                if command_type == 'set_fan':
+                if command_type == 'fan-mode':
                     await bedjet.set_fan_mode(command_value)
 
 
