@@ -136,7 +136,8 @@ class BedJet():
         await self.publish_mqtt('preset-mode', self.preset_mode)
 
     async def publish_mqtt(self, attribute, value):
-        await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}', payload=value.encode())
+        payload = value.encode() if not isinstance(value, int) else value
+        await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}', payload=payload)
 
     async def subscribe(self):
         return await self._client.start_notify(
