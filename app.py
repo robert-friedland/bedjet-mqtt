@@ -3,6 +3,7 @@ from bedjet import BedJet, BEDJET_COMMANDS
 import sys
 from config import MQTT, MAC_ADDRESSES
 import asyncio
+from bleak import BleakError
 
 
 async def run():
