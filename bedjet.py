@@ -16,7 +16,7 @@ class BedJet():
         self._timestring = None
         self._fan_pct = None
 
-        self._client = BleakClient(mac, disconnected_callback=self.reconnect)
+        self._client = BleakClient(mac)
         self._mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
 
@@ -106,9 +106,6 @@ class BedJet():
 
     async def connect(self):
         return await self._client.connect()
-
-    async def reconnect(self, client):
-        return await client.connect()
 
     async def handle_data(self, handle, value):
         def get_current_temperature(value):
