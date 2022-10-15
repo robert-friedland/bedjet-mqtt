@@ -1,6 +1,5 @@
-import asyncio
 from bleak import BleakClient
-from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS
+from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 
 
 class BedJet():
@@ -17,7 +16,7 @@ class BedJet():
         self._timestring = None
         self._fan_pct = None
 
-        self._client = BleakClient(mac)
+        self._client = BleakClient(mac, disconnected_callback=self.reconnect)
         self._mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
 
@@ -68,15 +67,10 @@ class BedJet():
     @property
     def fan_mode(self):
         fan_pct = self.fan_pct or 0
-        if fan_pct <= 10:
-            return 'min'
-        if fan_pct <= 25:
-            return 'low'
-        if fan_pct <= 50:
-            return 'medium'
-        if fan_pct <= 75:
-            return 'high'
-        return 'max'
+
+        for fan_mode, pct in BEDJET_FAN_MODES.items():
+            if fan_pct <= pct:
+                return fan_mode
 
     @current_temperature.setter
     def current_temperature(self, value):
@@ -112,6 +106,9 @@ class BedJet():
 
     async def connect(self):
         return await self._client.connect()
+
+    async def reconnect(self, client):
+        return await client.connect()
 
     async def handle_data(self, handle, value):
         def get_current_temperature(value):
@@ -189,6 +186,9 @@ class BedJet():
     async def send_command(self, command):
         return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
+    async def set_hvac_mode(self, hvac_mode):
+        return await self.send_command(BEDJET_COMMANDS.get(hvac_mode))
+
     async def set_mode(self, mode):
         return await self.send_command([0x01, mode])
 
@@ -198,16 +198,8 @@ class BedJet():
     async def set_fan_mode(self, fan_mode):
         if str(fan_mode).isnumeric():
             fan_pct = int(fan_mode)
-        elif fan_mode == 'min':
-            fan_pct = 10
-        elif fan_mode == 'low':
-            fan_pct = 25
-        elif fan_mode == 'medium':
-            fan_pct = 50
-        elif fan_mode == 'high':
-            fan_pct = 75
-        elif fan_mode == 'max':
-            fan_pct = 100
+        else:
+            fan_pct = BEDJET_FAN_MODES.get(fan_mode)
 
         if not (fan_pct >= 0 and fan_pct <= 100):
             return

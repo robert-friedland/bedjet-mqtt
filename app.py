@@ -1,5 +1,5 @@
 from asyncio_mqtt import Client, MqttError
-from bedjet import BedJet, BEDJET_COMMANDS
+from bedjet import BedJet
 import sys
 from config import MQTT, MAC_ADDRESSES
 import asyncio
@@ -29,7 +29,7 @@ async def run():
                 bedjet = bedjets[mac]
 
                 if command_type == 'hvac-mode':
-                    await bedjet.set_mode(BEDJET_COMMANDS.get(command_value))
+                    await bedjet.set_hvac_mode(command_value)
 
                 if command_type == 'target-temperature':
                     await bedjet.set_temperature(command_value)
