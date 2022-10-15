@@ -151,7 +151,7 @@ class BedJet():
     async def connect(self):
         return await self._client.connect()
 
-    async def handle_data(self, handle, value):
+    def handle_data(self, handle, value):
         def get_current_temperature(value):
             return round(((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
 
