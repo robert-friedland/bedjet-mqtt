@@ -1,6 +1,7 @@
 from bleak import BleakClient
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
+import asyncio
 
 
 class BedJet():
@@ -114,6 +115,8 @@ class BedJet():
     @last_seen.setter
     def last_seen(self, value):
         self._last_seen = value
+        asyncio.create_task(self.publish_mqtt(
+            'last-seen', self.last_seen.isoformat()))
 
     async def connect(self):
         return await self._client.connect()
@@ -183,7 +186,7 @@ class BedJet():
             {'topic': 'fan-mode', 'state': self.fan_mode},
             {'topic': 'hvac-mode', 'state': self.hvac_mode},
             {'topic': 'preset-mode', 'state': self.preset_mode},
-            {'topic': 'last-seen', 'state': self.last_seen.isoformat()}
+            # {'topic': 'last-seen', 'state': self.last_seen.isoformat()}
         ]
 
         for attribute in attributes:
