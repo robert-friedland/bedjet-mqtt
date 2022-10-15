@@ -82,11 +82,21 @@ class BedJet():
 
     @current_temperature.setter
     def current_temperature(self, value):
+        if self._current_temperature == value:
+            return
+
         self._current_temperature = value
+        asyncio.create_task(self.publish_mqtt(
+            'current-temperature', self.current_temperature))
 
     @target_temperature.setter
     def target_temperature(self, value):
+        if self._target_temperature == value:
+            return
+
         self._target_temperature = value
+        asyncio.create_task(self.publish_mqtt(
+            'target-temperature', self.target_temperature))
 
     @time.setter
     def time(self, value):
@@ -98,15 +108,30 @@ class BedJet():
 
     @fan_pct.setter
     def fan_pct(self, value):
+        if self._fan_pct == value:
+            return
+
         self._fan_pct = value
+        asyncio.create_task(self.publish_mqtt(
+            'fan-pct', self.fan_pct))
 
     @hvac_mode.setter
     def hvac_mode(self, value):
+        if self._hvac_mode == value:
+            return
+
         self._hvac_mode = value
+        asyncio.create_task(self.publish_mqtt(
+            'hvac-mode', self.hvac_mode))
 
     @preset_mode.setter
     def preset_mode(self, value):
+        if self._preset_mode == value:
+            return
+
         self._preset_mode = value
+        asyncio.create_task(self.publish_mqtt(
+            'preset-mode', self.preset_mode))
 
     @client.setter
     def client(self, value):
@@ -114,6 +139,9 @@ class BedJet():
 
     @last_seen.setter
     def last_seen(self, value):
+        if self._last_seen == value:
+            return
+
         self._last_seen = value
         asyncio.create_task(self.publish_mqtt(
             'last-seen', self.last_seen.isoformat()))
@@ -172,25 +200,9 @@ class BedJet():
         self.preset_mode = get_preset_mode(value)
         self.last_seen = datetime.now()
 
-        await self.update_attributes()
-
     async def publish_mqtt(self, attribute, value):
         payload = value.encode() if not isinstance(value, int) else value
         await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}/state', payload=payload)
-
-    async def update_attributes(self):
-        attributes = [
-            {'topic': 'current-temperature', 'state': self.current_temperature},
-            {'topic': 'target-temperature', 'state': self.target_temperature},
-            {'topic': 'fan-pct', 'state': self.fan_pct},
-            {'topic': 'fan-mode', 'state': self.fan_mode},
-            {'topic': 'hvac-mode', 'state': self.hvac_mode},
-            {'topic': 'preset-mode', 'state': self.preset_mode},
-            # {'topic': 'last-seen', 'state': self.last_seen.isoformat()}
-        ]
-
-        for attribute in attributes:
-            await self.publish_mqtt(attribute['topic'], attribute['state'])
 
     async def subscribe(self):
         return await self._client.start_notify(
