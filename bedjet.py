@@ -114,6 +114,8 @@ class BedJet():
         self._fan_pct = value
         asyncio.create_task(self.publish_mqtt(
             'fan-pct', self.fan_pct))
+        asyncio.create_task(self.publish_mqtt(
+            'fan-mode', self.fan_mode))
 
     @hvac_mode.setter
     def hvac_mode(self, value):
