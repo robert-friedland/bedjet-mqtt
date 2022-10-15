@@ -183,9 +183,6 @@ class BedJet():
     async def send_command(self, command):
         return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
-    async def set_hvac_mode(self, hvac_mode):
-        return await self.send_command(BEDJET_COMMANDS.get(hvac_mode))
-
     async def set_mode(self, mode):
         return await self.send_command([0x01, mode])
 
