@@ -1,5 +1,6 @@
 from bleak import BleakClient
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
+from datetime import datetime
 
 
 class BedJet():
@@ -15,6 +16,8 @@ class BedJet():
         self._time = None
         self._timestring = None
         self._fan_pct = None
+
+        self._last_seen = None
 
         self._client = BleakClient(mac)
         self._mqtt_client = mqtt_client
@@ -72,6 +75,10 @@ class BedJet():
             if fan_pct <= pct:
                 return fan_mode
 
+    @property
+    def last_seen(self):
+        return self._last_seen
+
     @current_temperature.setter
     def current_temperature(self, value):
         self._current_temperature = value
@@ -103,6 +110,10 @@ class BedJet():
     @client.setter
     def client(self, value):
         self._client = value
+
+    @last_seen.setter
+    def last_seen(self, value):
+        self._last_seen = value
 
     async def connect(self):
         return await self._client.connect()
@@ -156,6 +167,7 @@ class BedJet():
         self.fan_pct = get_fan_pct(value)
         self.hvac_mode = get_hvac_mode(value)
         self.preset_mode = get_preset_mode(value)
+        self.last_seen = datetime.now()
 
         await self.update_attributes()
 
@@ -171,6 +183,7 @@ class BedJet():
             {'topic': 'fan-mode', 'state': self.fan_mode},
             {'topic': 'hvac-mode', 'state': self.hvac_mode},
             {'topic': 'preset-mode', 'state': self.preset_mode},
+            {'topic': 'last-seen', 'state': self.last_seen.isoformat()}
         ]
 
         for attribute in attributes:
