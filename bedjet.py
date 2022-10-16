@@ -160,7 +160,8 @@ class BedJet():
             return
 
         self._is_connected = value
-        asyncio.create_task(self.publish_mqtt('available', self._is_connected))
+        asyncio.create_task(self.publish_mqtt(
+            'available', 'online' if self._is_connected else 'offline'))
 
     async def connect(self):
         await self._client.connect()
