@@ -19,8 +19,10 @@ class BedJet():
         self._fan_pct = None
 
         self._last_seen = None
+        self._is_connected = False
 
-        self._client = BleakClient(mac)
+        self._client = BleakClient(
+            mac, disconnected_callback=self.on_disconnect)
         self._mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
 
@@ -79,6 +81,10 @@ class BedJet():
     @property
     def last_seen(self):
         return self._last_seen
+
+    @property
+    def is_connected(self):
+        return self._is_connected
 
     @current_temperature.setter
     def current_temperature(self, value):
@@ -148,8 +154,20 @@ class BedJet():
         asyncio.create_task(self.publish_mqtt(
             'last-seen', self.last_seen.isoformat()))
 
+    @is_connected.setter
+    def is_connected(self, value):
+        if self._is_connected == value:
+            return
+
+        self._is_connected = value
+        asyncio.create_task(self.publish_mqtt('available', self._is_connected))
+
     async def connect(self):
-        return await self._client.connect()
+        await self._client.connect()
+        self.is_connected = True
+
+    def on_disconnect(self, client):
+        self.is_connected = False
 
     def handle_data(self, handle, value):
         def get_current_temperature(value):
