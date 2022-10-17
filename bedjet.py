@@ -169,6 +169,7 @@ class BedJet():
 
     def on_disconnect(self, client):
         self.is_connected = False
+        asyncio.create_task(self.connect())
 
     def handle_data(self, handle, value):
         def get_current_temperature(value):
@@ -230,7 +231,8 @@ class BedJet():
             BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
 
     async def send_command(self, command):
-        return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
+        if self.is_connected:
+            return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
     async def set_mode(self, mode):
         return await self.send_command([0x01, mode])
