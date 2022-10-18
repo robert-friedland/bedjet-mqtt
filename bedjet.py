@@ -20,11 +20,10 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
-    def __init__(self, mac, mqtt_client, mqtt_topic, should_publish_to_mqtt):
+    def __init__(self, mac, mqtt_client, mqtt_topic):
         self._mac = mac
 
         self._state: BedJetState = BedJetState()
-        self.should_publish_to_mqtt = should_publish_to_mqtt
 
         self._client = BleakClient(
             mac, disconnected_callback=self.on_disconnect)
