@@ -12,6 +12,7 @@ async def run(bedjets):
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
+        print(bedjets)
         for bedjet in bedjets:
             print(type(bedjet))
             bedjet.mqtt_client = client
