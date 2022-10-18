@@ -37,21 +37,11 @@ async def run(bedjets):
 
 async def connect_bedjets():
     bedjets = {}
-    reconnect_interval = 3
     for mac in MAC_ADDRESSES:
         bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
         bedjets[mac] = bedjet
 
-        while True:
-            try:
-                logging.info(f'Attempting to connect to {mac}.')
-                await bedjet.connect()
-                break
-            except BleakError as error:
-                logging.error(
-                    f'Error "{error}". Retrying in {reconnect_interval} seconds.')
-                await asyncio.sleep(reconnect_interval)
-
+        await bedjet.connect()
         await bedjet.subscribe()
 
     return bedjets

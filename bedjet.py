@@ -1,9 +1,10 @@
 import string
-from bleak import BleakClient
+from bleak import BleakClient, BleakError
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
 import asyncio
 from typing import TypedDict, Union
+import logging
 
 
 class BedJetState(TypedDict):
@@ -181,9 +182,25 @@ class BedJet():
     def is_connected(self, value: bool):
         self.set_state_attr('available', 'online' if value else 'offline')
 
-    async def connect(self):
-        await self._client.connect()
-        self.is_connected = True
+    async def connect(self, max_retries=10):
+        reconnect_interval = 3
+        for i in range(0, max_retries):
+            try:
+                logging.info(f'Attempting to connect to {self.mac}.')
+                await self._client.connect()
+                self.is_connected = True
+                break
+            except BleakError as error:
+                backoff_seconds = (i+1) * 3
+                logging.error(
+                    f'Error "{error}". Retrying in {backoff_seconds} seconds.')
+                await asyncio.sleep(backoff_seconds)
+
+        if not self.is_connected:
+            logging.error(
+                f'Failed to connect to {self.mac} after {max_retries} attempts.')
+            raise Exception(
+                f'Failed to connect to {self.mac} after {max_retries} attempts.')
 
     def on_disconnect(self, client):
         self.is_connected = False
