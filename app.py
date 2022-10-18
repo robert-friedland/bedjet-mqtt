@@ -6,8 +6,6 @@ import asyncio
 from bleak import BleakError
 import logging
 
-logging.basicConfig(filename='app.log', filemode='w', level=logging.DEBUG)
-
 
 async def run(bedjets):
     async with Client(
@@ -52,7 +50,6 @@ async def connect_bedjets():
             except BleakError as error:
                 logging.error(
                     f'Error "{error}". Retrying in {reconnect_interval} seconds.')
-            finally:
                 await asyncio.sleep(reconnect_interval)
 
         await bedjet.subscribe()
