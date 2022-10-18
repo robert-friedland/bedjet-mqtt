@@ -6,7 +6,7 @@ import asyncio
 from typing import TypedDict, Union
 import logging
 
-logging.setLevel('INFO')
+logging.getLogger().setLevel('INFO')
 
 
 class BedJetState(TypedDict):
