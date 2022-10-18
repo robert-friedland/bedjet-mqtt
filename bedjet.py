@@ -149,6 +149,7 @@ class BedJet():
         self.set_state_attr('fan_mode', self.determine_fan_mode(value))
 
     def determine_fan_mode(self, fan_pct: int) -> str:
+        fan_pct = fan_pct or 0
         for fan_mode, pct in BEDJET_FAN_MODES.items():
             if fan_pct <= pct:
                 return fan_mode
