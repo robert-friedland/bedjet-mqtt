@@ -124,6 +124,14 @@ class BedJet():
     def is_connected(self):
         return self.state_attr('available') == 'online'
 
+    @property
+    def should_publish_to_mqtt(self):
+        return self._should_publish_to_mqtt
+
+    @should_publish_to_mqtt.setter
+    def should_publish_to_mqtt(self, value: bool):
+        self._should_publish_to_mqtt = value
+
     @current_temperature.setter
     def current_temperature(self, value: int):
         self.set_state_attr('current_temperature', value)
