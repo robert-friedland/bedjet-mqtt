@@ -171,6 +171,11 @@ class BedJet():
     @mqtt_client.setter
     def mqtt_client(self, value):
         self._mqtt_client = value
+        self.publish_all_attributes()
+
+    def publish_all_attributes(self):
+        for attr in self.state.keys():
+            self.publish_state(attr)
 
     @last_seen.setter
     def last_seen(self, value: datetime):
