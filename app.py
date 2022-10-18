@@ -6,6 +6,8 @@ import asyncio
 from bleak import BleakError
 import logging
 
+logging.basicConfig(filename='app.log', filemode='w', level=logging.DEBUG)
+
 
 async def run(bedjets):
     async with Client(
@@ -44,6 +46,7 @@ async def connect_bedjets():
 
         while True:
             try:
+                logging.info(f'Attempting to connect to {mac}.')
                 await bedjet.connect()
                 break
             except BleakError as error:
