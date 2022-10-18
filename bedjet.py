@@ -239,6 +239,8 @@ class BedJet():
         self.preset_mode = get_preset_mode(value)
         self.last_seen = datetime.now()
 
+        print(self.state)
+
     async def publish_mqtt(self, attribute, value):
         payload = value.encode() if not isinstance(value, int) else value
         await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}/state', payload=payload, qos=1, retain=True)
