@@ -13,6 +13,7 @@ async def run(bedjets):
         password=MQTT['password']
     ) as client:
         for bedjet in bedjets:
+            print(type(bedjet))
             bedjet.mqtt_client = client
             bedjet.should_publish_to_mqtt = True
 
