@@ -39,7 +39,7 @@ class BedJet():
 
         self._client = BleakClient(
             mac, disconnected_callback=self.on_disconnect)
-        self._mqtt_client = mqtt_client
+        self.mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
@@ -109,7 +109,7 @@ class BedJet():
 
     @property
     def mqtt_client(self):
-        return self._mqtt_client or None
+        return self._mqtt_client
 
     @property
     def mqtt_topic(self):
@@ -165,6 +165,10 @@ class BedJet():
     @client.setter
     def client(self, value):
         self._client = value
+
+    @mqtt_client.setter
+    def mqtt_client(self, value):
+        self._mqtt_client = value
 
     @last_seen.setter
     def last_seen(self, value: datetime):
