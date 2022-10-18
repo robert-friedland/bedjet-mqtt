@@ -1,11 +1,8 @@
 from asyncio_mqtt import Client, MqttError
 from bedjet import BedJet
-import sys
 from config import MQTT, MAC_ADDRESSES
 import asyncio
-from bleak import BleakError
 import logging
-from bluetoothctl import Bluetoothctl
 
 
 async def run(bedjets):
@@ -38,9 +35,7 @@ async def run(bedjets):
 
 async def connect_bedjets():
     bedjets = {}
-    bluetoothctl = Bluetoothctl()
     for mac in MAC_ADDRESSES:
-        bluetoothctl.disconnect(mac)
         bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
         bedjets[mac] = bedjet
 
