@@ -57,7 +57,7 @@ class BedJet():
 
     def publish_state(self, attr):
         topic = attr.replace('_', '-')
-        state = self.state(attr)
+        state = self.state_attr(attr)
 
         if isinstance(state, datetime):
             state = state.isoformat()

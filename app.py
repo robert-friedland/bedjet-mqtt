@@ -12,7 +12,6 @@ async def run(bedjets):
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
-        print(bedjets)
         for mac, bedjet in bedjets.items():
             bedjet.mqtt_client = client
             bedjet.should_publish_to_mqtt = True
@@ -43,7 +42,6 @@ async def connect_bedjets():
         bedjets[mac] = bedjet
         await bedjet.connect()
         await bedjet.subscribe()
-        print(type(bedjet))
 
     return bedjets
 
@@ -51,7 +49,6 @@ async def connect_bedjets():
 async def main():
     reconnect_interval = 3
     bedjets = await connect_bedjets()
-    print(bedjets)
     while True:
         try:
             await run(bedjets)
