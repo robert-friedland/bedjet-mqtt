@@ -62,6 +62,8 @@ class BedJet():
         if isinstance(state, datetime):
             state = state.isoformat()
 
+        print(f'{topic}: {state}')
+
         asyncio.create_task(self.publish_mqtt(topic, state))
 
     @property
@@ -126,11 +128,7 @@ class BedJet():
 
     @property
     def should_publish_to_mqtt(self):
-        return self._should_publish_to_mqtt
-
-    @should_publish_to_mqtt.setter
-    def should_publish_to_mqtt(self, value: bool):
-        self._should_publish_to_mqtt = value
+        return self.mqtt_client and self.mqtt_topic
 
     @current_temperature.setter
     def current_temperature(self, value: int):

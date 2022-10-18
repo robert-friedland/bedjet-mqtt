@@ -14,7 +14,6 @@ async def run(bedjets):
     ) as client:
         for mac, bedjet in bedjets.items():
             bedjet.mqtt_client = client
-            bedjet.should_publish_to_mqtt = True
 
         async with client.filtered_messages('bedjet/+/+/set') as messages:
             await client.subscribe('bedjet/#')
