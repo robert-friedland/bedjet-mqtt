@@ -109,7 +109,7 @@ class BedJet():
 
     @property
     def mqtt_client(self):
-        return self._mqtt_client
+        return self._mqtt_client or None
 
     @property
     def mqtt_topic(self):
