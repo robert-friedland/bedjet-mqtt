@@ -36,10 +36,21 @@ async def run(bedjets):
 
 async def connect_bedjets():
     bedjets = {}
+    reconnect_interval = 3
     for mac in MAC_ADDRESSES:
         bedjet = BedJet(mac, None, f'bedjet/{mac}')
         bedjets[mac] = bedjet
-        await bedjet.connect()
+
+        while True:
+            try:
+                await bedjet.connect()
+                break
+            except BleakError as error:
+                print(
+                    f'Error "{error}". Retrying in {reconnect_interval} seconds.')
+            finally:
+                await asyncio.sleep(reconnect_interval)
+
         await bedjet.subscribe()
 
     return bedjets
