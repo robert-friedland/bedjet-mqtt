@@ -20,10 +20,10 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
-    def __init__(self, mac, mqtt_client=None, mqtt_topic=None, should_publish_to_mqtt=False):
+    def __init__(self, mac, mqtt_client, mqtt_topic, should_publish_to_mqtt):
         self._mac = mac
 
-        self._bedjet_state: BedJetState = BedJetState()
+        self._state: BedJetState = BedJetState()
 
         self.current_temperature = None
         self.target_temperature = None
@@ -50,7 +50,7 @@ class BedJet():
         if self.state_attr(attr) == value:
             return
 
-        self._bedjet_state[attr] = value
+        self._state[attr] = value
 
         if self.should_publish_to_mqtt:
             self.publish_state(attr)
@@ -70,7 +70,7 @@ class BedJet():
 
     @property
     def state(self):
-        return self._bedjet_state
+        return self._state
 
     @property
     def current_temperature(self) -> int:
