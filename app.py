@@ -38,7 +38,7 @@ async def connect_bedjets():
     bedjets = {}
     reconnect_interval = 3
     for mac in MAC_ADDRESSES:
-        bedjet = BedJet(mac, None, f'bedjet/{mac}')
+        bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
         bedjets[mac] = bedjet
 
         while True:

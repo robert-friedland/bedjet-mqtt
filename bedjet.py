@@ -20,7 +20,7 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
-    def __init__(self, mac, mqtt_client, mqtt_topic):
+    def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
         self._mac = mac
 
         self._state: BedJetState = BedJetState()
@@ -34,11 +34,9 @@ class BedJet():
         self.target_temperature = None
         self.hvac_mode = None
         self.preset_mode = None
-
         self.time = None
         self.timestring = None
         self.fan_pct = None
-
         self.last_seen = None
         self.is_connected = False
 
@@ -60,8 +58,6 @@ class BedJet():
 
         if isinstance(state, datetime):
             state = state.isoformat()
-
-        print(f'{topic}: {state}')
 
         asyncio.create_task(self.publish_mqtt(topic, state))
 
@@ -243,8 +239,6 @@ class BedJet():
         self.hvac_mode = get_hvac_mode(value)
         self.preset_mode = get_preset_mode(value)
         self.last_seen = datetime.now()
-
-        print(self.state)
 
     async def publish_mqtt(self, attribute, value):
         payload = value.encode() if not isinstance(value, int) else value
