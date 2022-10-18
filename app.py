@@ -50,6 +50,7 @@ async def connect_bedjets():
 async def main():
     reconnect_interval = 3
     bedjets = await connect_bedjets()
+    keep_running = True
     while True:
         try:
             await run(bedjets)
@@ -57,9 +58,12 @@ async def main():
             logging.error(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         except KeyboardInterrupt:
-            sys.exit(0)
+            for bedjet in bedjets:
+                await bedjet.disconnect()
+            keep_running = False
         finally:
-            await asyncio.sleep(reconnect_interval)
+            if keep_running:
+                await asyncio.sleep(reconnect_interval)
 
 
 asyncio.run(main())

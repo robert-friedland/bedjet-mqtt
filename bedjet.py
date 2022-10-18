@@ -206,6 +206,10 @@ class BedJet():
         self.is_connected = False
         asyncio.create_task(self.connect())
 
+    async def disconnect(self):
+        self.client.set_disconnected_callback(None)
+        await self.client.disconnect()
+
     def handle_data(self, handle, value):
         def get_current_temperature(value):
             return round(((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
