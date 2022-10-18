@@ -193,7 +193,7 @@ class BedJet():
                 self.is_connected = True
                 break
             except BleakError as error:
-                backoff_seconds = (i+1) * 3
+                backoff_seconds = (i+1) * reconnect_interval
                 logging.error(
                     f'Error "{error}". Retrying in {backoff_seconds} seconds.')
 

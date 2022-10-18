@@ -5,6 +5,7 @@ from config import MQTT, MAC_ADDRESSES
 import asyncio
 from bleak import BleakError
 import logging
+from bluetoothctl import Bluetoothctl
 
 
 async def run(bedjets):
@@ -37,7 +38,9 @@ async def run(bedjets):
 
 async def connect_bedjets():
     bedjets = {}
+    bluetoothctl = Bluetoothctl()
     for mac in MAC_ADDRESSES:
+        bluetoothctl.disconnect(mac)
         bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
         bedjets[mac] = bedjet
 
@@ -50,20 +53,14 @@ async def connect_bedjets():
 async def main():
     reconnect_interval = 3
     bedjets = await connect_bedjets()
-    keep_running = True
     while True:
         try:
             await run(bedjets)
         except MqttError as error:
             logging.error(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
-        except KeyboardInterrupt:
-            for bedjet in bedjets:
-                await bedjet.disconnect()
-            keep_running = False
         finally:
-            if keep_running:
-                await asyncio.sleep(reconnect_interval)
+            await asyncio.sleep(reconnect_interval)
 
 
 asyncio.run(main())
