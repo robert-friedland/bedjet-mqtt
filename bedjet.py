@@ -6,6 +6,8 @@ import asyncio
 from typing import TypedDict, Union
 import logging
 
+logging.setLevel('INFO')
+
 
 class BedJetState(TypedDict):
     current_temperature: int
