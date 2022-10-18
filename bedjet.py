@@ -178,7 +178,7 @@ class BedJet():
 
     @is_connected.setter
     def is_connected(self, value: bool):
-        self.set_state_attr('available', 'available' if value else 'offline')
+        self.set_state_attr('available', 'online' if value else 'offline')
 
     async def connect(self):
         await self._client.connect()
