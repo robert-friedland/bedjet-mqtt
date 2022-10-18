@@ -47,7 +47,7 @@ async def connect_bedjets():
 
 async def main():
     reconnect_interval = 3
-    bedjets = connect_bedjets()
+    bedjets = await connect_bedjets()
     while True:
         try:
             await run(bedjets)
