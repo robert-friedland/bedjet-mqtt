@@ -6,18 +6,14 @@ import asyncio
 from bleak import BleakError
 
 
-async def run():
+async def run(bedjets):
     async with Client(
         MQTT['host'],
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
-        bedjets = {}
-        for mac in MAC_ADDRESSES:
-            bedjet = BedJet(mac, client, f'bedjet/{mac}')
-            bedjets[mac] = bedjet
-            await bedjet.connect()
-            await bedjet.subscribe()
+        for bedjet in bedjets:
+            bedjet.mqtt_client = client
 
         async with client.filtered_messages('bedjet/+/+/set') as messages:
             await client.subscribe('bedjet/#')
@@ -38,20 +34,30 @@ async def run():
                     await bedjet.set_fan_mode(command_value)
 
 
+async def connect_bedjets():
+    bedjets = {}
+    for mac in MAC_ADDRESSES:
+        bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
+        bedjets[mac] = bedjet
+        await bedjet.connect()
+        await bedjet.subscribe()
+
+    return bedjets
+
+
 async def main():
     reconnect_interval = 3
+    bedjets = connect_bedjets()
     while True:
         try:
-            await run()
+            await run(bedjets)
         except MqttError as error:
-            print(
-                f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
-        except BleakError as error:
             print(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         except KeyboardInterrupt:
             sys.exit(0)
         finally:
             await asyncio.sleep(reconnect_interval)
+
 
 asyncio.run(main())

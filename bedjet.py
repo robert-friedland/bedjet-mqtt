@@ -1,62 +1,107 @@
+import string
 from bleak import BleakClient
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
 import asyncio
+from typing import TypedDict, Union
+
+
+class BedJetState(TypedDict):
+    current_temperature: int
+    target_temperature: int
+    hvac_mode: str
+    preset_mode: str
+    time: str
+    timestring: str
+    fan_pct: int
+    fan_mode: str
+    last_seen: datetime
+    available: str
 
 
 class BedJet():
-    def __init__(self, mac, mqtt_client, mqtt_topic):
+    def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
         self._mac = mac
 
-        self._current_temperature = None
-        self._target_temperature = None
-        self._last_seen = None
-        self._hvac_mode = None
-        self._preset_mode = None
+        self._state: BedJetState = BedJetState()
 
-        self._time = None
-        self._timestring = None
-        self._fan_pct = None
+        self.current_temperature = None
+        self.target_temperature = None
+        self.hvac_mode = None
+        self.preset_mode = None
 
-        self._last_seen = None
-        self._is_connected = False
+        self.time = None
+        self.timestring = None
+        self.fan_pct = None
+
+        self.last_seen = None
+        self.is_connected = False
 
         self._client = BleakClient(
             mac, disconnected_callback=self.on_disconnect)
         self._mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
 
+    def state_attr(self, attr: str) -> Union[int, str, datetime]:
+        return self.state.get(attr)
+
+    def set_state_attr(self, attr: str, value: Union[int, str, datetime]):
+        if self.state_attr(attr) == value:
+            return
+
+        self._state[attr] = value
+
+        if self.can_publish_state():
+            self.publish_state(attr)
+
+    def publish_state(self, attr):
+        topic = attr.replace('_', '-')
+        state = self.state(attr)
+
+        if isinstance(state, datetime):
+            state = state.isoformat()
+
+        asyncio.create_task(self.publish_mqtt(topic, state))
+
+    @property
+    def can_publish_state(self):
+        return self.mqtt_client and self.mqtt_topic
+
     @property
     def mac(self):
         return self._mac
 
     @property
-    def current_temperature(self):
-        return self._current_temperature
+    def state(self):
+        return self._state
 
     @property
-    def target_temperature(self):
-        return self._target_temperature
+    def current_temperature(self) -> int:
+        return self.state_attr('current_temperature')
 
     @property
-    def time(self):
-        return self._time
+    def target_temperature(self) -> int:
+        return self.state_attr('target_temperature')
 
     @property
-    def timestring(self):
-        return self._timestring
+    def time(self) -> str:
+        return self.state_attr('time')
 
     @property
-    def fan_pct(self):
-        return self._fan_pct
+    def timestring(self) -> str:
+        return self.state_attr('timestring')
 
     @property
-    def hvac_mode(self):
-        return self._hvac_mode
+    def fan_pct(self) -> int:
+        return self.state_attr('fan_pct')
 
     @property
-    def preset_mode(self):
-        return self._preset_mode
+    def hvac_mode(self) -> str:
+        return self.state_attr('hvac_mode')
+
+    @property
+    def preset_mode(self) -> str:
+        return self.state_attr('preset_mode')
 
     @property
     def client(self):
@@ -71,97 +116,62 @@ class BedJet():
         return self._mqtt_topic
 
     @property
-    def fan_mode(self):
-        fan_pct = self.fan_pct or 0
+    def fan_mode(self) -> str:
+        return self.state_attr('fan_mode')
 
+    @property
+    def last_seen(self) -> datetime:
+        return self.state_attr('last_seen')
+
+    @property
+    def is_connected(self):
+        return self.state_attr('available') == 'online'
+
+    @current_temperature.setter
+    def current_temperature(self, value: int):
+        self.set_state_attr('current_temperature', value)
+
+    @target_temperature.setter
+    def target_temperature(self, value: int):
+        self.set_state_attr('target_temperature', value)
+
+    @time.setter
+    def time(self, value: str):
+        self.set_state_attr('time', value)
+
+    @timestring.setter
+    def timestring(self, value: str):
+        self.set_state_attr('timestring', value)
+
+    @fan_pct.setter
+    def fan_pct(self, value: int):
+        self.set_state_attr('fan_pct', value)
+        self.set_state_attr('fan_mode', self.determine_fan_mode(value))
+
+    def determine_fan_mode(self, fan_pct: int) -> str:
         for fan_mode, pct in BEDJET_FAN_MODES.items():
             if fan_pct <= pct:
                 return fan_mode
 
-    @property
-    def last_seen(self):
-        return self._last_seen
-
-    @property
-    def is_connected(self):
-        return self._is_connected
-
-    @current_temperature.setter
-    def current_temperature(self, value):
-        if self._current_temperature == value:
-            return
-
-        self._current_temperature = value
-        asyncio.create_task(self.publish_mqtt(
-            'current-temperature', self.current_temperature))
-
-    @target_temperature.setter
-    def target_temperature(self, value):
-        if self._target_temperature == value:
-            return
-
-        self._target_temperature = value
-        asyncio.create_task(self.publish_mqtt(
-            'target-temperature', self.target_temperature))
-
-    @time.setter
-    def time(self, value):
-        self._time = value
-
-    @timestring.setter
-    def timestring(self, value):
-        self._timestring = value
-
-    @fan_pct.setter
-    def fan_pct(self, value):
-        if self._fan_pct == value:
-            return
-
-        self._fan_pct = value
-        asyncio.create_task(self.publish_mqtt(
-            'fan-pct', self.fan_pct))
-        asyncio.create_task(self.publish_mqtt(
-            'fan-mode', self.fan_mode))
-
     @hvac_mode.setter
-    def hvac_mode(self, value):
-        if self._hvac_mode == value:
-            return
-
-        self._hvac_mode = value
-        asyncio.create_task(self.publish_mqtt(
-            'hvac-mode', self.hvac_mode))
+    def hvac_mode(self, value: str):
+        self.set_state_attr('hvac_mode', value)
 
     @preset_mode.setter
-    def preset_mode(self, value):
-        if self._preset_mode == value:
-            return
-
-        self._preset_mode = value
-        asyncio.create_task(self.publish_mqtt(
-            'preset-mode', self.preset_mode))
+    def preset_mode(self, value: str):
+        self.set_state_attr('preset_mode', value)
 
     @client.setter
     def client(self, value):
         self._client = value
 
     @last_seen.setter
-    def last_seen(self, value):
-        if self._last_seen == value:
-            return
-
-        self._last_seen = value
-        asyncio.create_task(self.publish_mqtt(
-            'last-seen', self.last_seen.isoformat()))
+    def last_seen(self, value: datetime):
+        self.set_state_attr('last_seen', value)
 
     @is_connected.setter
-    def is_connected(self, value):
-        if self._is_connected == value:
-            return
-
-        self._is_connected = value
-        asyncio.create_task(self.publish_mqtt(
-            'available', 'online' if self._is_connected else 'offline'))
+    def is_connected(self, value: bool):
+        self.set_state_attr('available', 'available' if value else 'offline')
 
     async def connect(self):
         await self._client.connect()
