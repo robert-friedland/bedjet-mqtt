@@ -20,7 +20,7 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
-    def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
+    def __init__(self, mac, mqtt_client=None, mqtt_topic=None, should_publish_to_mqtt=False):
         self._mac = mac
 
         self._state: BedJetState = BedJetState()
@@ -41,6 +41,7 @@ class BedJet():
             mac, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
+        self.should_publish_to_mqtt = should_publish_to_mqtt
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
@@ -51,7 +52,7 @@ class BedJet():
 
         self._state[attr] = value
 
-        if self.can_publish_state():
+        if self.should_publish_to_mqtt:
             self.publish_state(attr)
 
     def publish_state(self, attr):
@@ -62,10 +63,6 @@ class BedJet():
             state = state.isoformat()
 
         asyncio.create_task(self.publish_mqtt(topic, state))
-
-    @property
-    def can_publish_state(self):
-        return self.mqtt_client and self.mqtt_topic
 
     @property
     def mac(self):
