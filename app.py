@@ -37,7 +37,7 @@ async def run(bedjets):
 async def connect_bedjets():
     bedjets = {}
     for mac in MAC_ADDRESSES:
-        bedjet = BedJet(mac, None, f'bedjet/{mac}', False)
+        bedjet = BedJet(mac, None, f'bedjet/{mac}')
         bedjets[mac] = bedjet
         await bedjet.connect()
         await bedjet.subscribe()
