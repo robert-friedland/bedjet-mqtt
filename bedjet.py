@@ -36,12 +36,12 @@ class BedJet():
 
         self.last_seen = None
         self.is_connected = False
+        self.should_publish_to_mqtt = should_publish_to_mqtt
 
         self._client = BleakClient(
             mac, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
         self._mqtt_topic = mqtt_topic
-        self.should_publish_to_mqtt = should_publish_to_mqtt
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
