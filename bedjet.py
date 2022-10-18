@@ -187,13 +187,20 @@ class BedJet():
         for i in range(0, max_retries):
             try:
                 logging.info(f'Attempting to connect to {self.mac}.')
-                await self._client.connect()
+                await self.client.connect()
                 self.is_connected = True
                 break
             except BleakError as error:
                 backoff_seconds = (i+1) * 3
                 logging.error(
                     f'Error "{error}". Retrying in {backoff_seconds} seconds.')
+
+                try:
+                    logging.info(f'Attempting to disconnect from {self.mac}.')
+                    await self.client.disconnect()
+                except BleakError as error:
+                    logging.error(
+                        f'Error "{error}". Retrying in {backoff_seconds} seconds.')
                 await asyncio.sleep(backoff_seconds)
 
         if not self.is_connected:
@@ -204,7 +211,7 @@ class BedJet():
 
     def on_disconnect(self, client):
         self.is_connected = False
-        asyncio.create_task(self.connect())
+        # asyncio.create_task(self.connect())
 
     async def disconnect(self):
         self.client.set_disconnected_callback(None)
