@@ -4,6 +4,7 @@ import sys
 from config import MQTT, MAC_ADDRESSES
 import asyncio
 from bleak import BleakError
+import logging
 
 
 async def run(bedjets):
@@ -46,7 +47,7 @@ async def connect_bedjets():
                 await bedjet.connect()
                 break
             except BleakError as error:
-                print(
+                logging.error(
                     f'Error "{error}". Retrying in {reconnect_interval} seconds.')
             finally:
                 await asyncio.sleep(reconnect_interval)
@@ -63,7 +64,7 @@ async def main():
         try:
             await run(bedjets)
         except MqttError as error:
-            print(
+            logging.error(
                 f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         except KeyboardInterrupt:
             sys.exit(0)
