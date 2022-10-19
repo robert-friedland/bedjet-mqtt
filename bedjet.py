@@ -220,6 +220,8 @@ class BedJet():
             raise Exception(
                 f'Failed to connect to {self.mac} after {max_retries} attempts.')
 
+        await self.subscribe()
+
     def on_disconnect(self, client):
         self.is_connected = False
         logger.warning(f'Disconnected from {self.mac}.')

@@ -40,7 +40,6 @@ async def connect_bedjets():
         bedjets[mac] = bedjet
 
         await bedjet.connect()
-        await bedjet.subscribe()
 
     return bedjets
 
