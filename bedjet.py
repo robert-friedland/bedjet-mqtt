@@ -6,7 +6,8 @@ import asyncio
 from typing import TypedDict, Union
 import logging
 
-logging.getLogger().setLevel(logging.INFO)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter("(%(asctime)s) %(levelname)s:%(message)s",
                               "%Y-%m-%d %H:%M:%S")
 ch = logging.StreamHandler()
@@ -14,7 +15,7 @@ ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 
 # add ch to logger
-logging.getLogger().addHandler(ch)
+logger.addHandler(ch)
 
 
 class BedJetState(TypedDict):
@@ -196,32 +197,32 @@ class BedJet():
         reconnect_interval = 3
         for i in range(0, max_retries):
             try:
-                logging.info(f'Attempting to connect to {self.mac}.')
+                logger.info(f'Attempting to connect to {self.mac}.')
                 await self.client.connect()
                 self.is_connected = True
-                logging.info(f'Connected to {self.mac}.')
+                logger.info(f'Connected to {self.mac}.')
                 break
             except BleakError as error:
                 backoff_seconds = (i+1) * reconnect_interval
-                logging.error(
+                logger.error(
                     f'Error "{error}". Retrying in {backoff_seconds} seconds.')
 
                 try:
-                    logging.info(f'Attempting to disconnect from {self.mac}.')
+                    logger.info(f'Attempting to disconnect from {self.mac}.')
                     await self.client.disconnect()
                 except BleakError as error:
-                    logging.error(f'Error "{error}".')
+                    logger.error(f'Error "{error}".')
                 await asyncio.sleep(backoff_seconds)
 
         if not self.is_connected:
-            logging.error(
+            logger.error(
                 f'Failed to connect to {self.mac} after {max_retries} attempts.')
             raise Exception(
                 f'Failed to connect to {self.mac} after {max_retries} attempts.')
 
     def on_disconnect(self, client):
         self.is_connected = False
-        logging.warning(f'Disconnected from {self.mac}.')
+        logger.warning(f'Disconnected from {self.mac}.')
         asyncio.create_task(self.connect())
 
     async def disconnect(self):
