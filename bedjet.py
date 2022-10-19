@@ -213,7 +213,8 @@ class BedJet():
 
     def on_disconnect(self, client):
         self.is_connected = False
-        # asyncio.create_task(self.connect())
+        logging.warning(f'Disconnected from {self.mac}.')
+        asyncio.create_task(self.connect())
 
     async def disconnect(self):
         self.client.set_disconnected_callback(None)
