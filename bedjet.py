@@ -6,7 +6,15 @@ import asyncio
 from typing import TypedDict, Union
 import logging
 
-logging.getLogger().setLevel('INFO')
+logging.getLogger().setLevel(logging.INFO)
+formatter = logging.Formatter("(%(asctime)s) %(levelname)s:%(message)s",
+                              "%Y-%m-%d %H:%M:%S")
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+ch.setFormatter(formatter)
+
+# add ch to logger
+logging.getLogger().addHandler(ch)
 
 
 class BedJetState(TypedDict):
