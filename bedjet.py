@@ -220,7 +220,9 @@ class BedJet():
             raise Exception(
                 f'Failed to connect to {self.mac} after {max_retries} attempts.')
 
-        await self.subscribe()
+    async def connect_and_subscribe(self, max_retries=10):
+        await self.connect(max_retries)
+        await self.subscribe(max_retries)
 
     def on_disconnect(self, client):
         self.is_connected = False
@@ -286,9 +288,31 @@ class BedJet():
         payload = value.encode() if not isinstance(value, int) else value
         await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}/state', payload=payload, qos=1, retain=True)
 
-    async def subscribe(self):
-        return await self._client.start_notify(
-            BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
+    async def subscribe(self, max_retries=10):
+        reconnect_interval = 3
+        is_subscribed = False
+        for i in range(0, max_retries):
+            try:
+                logger.info(
+                    f'Attempting to subscribe to notifications from {self.mac} on {BEDJET_SUBSCRIPTION_UUID}.')
+                await self._client.start_notify(
+                    BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
+                is_subscribed = True
+                logger.info(
+                    f'Subscribed to {self.mac} on {BEDJET_SUBSCRIPTION_UUID}.')
+                break
+            except BleakError as error:
+                backoff_seconds = (i+1) * reconnect_interval
+                logger.error(
+                    f'Error "{error}". Retrying in {backoff_seconds} seconds.')
+
+                await asyncio.sleep(backoff_seconds)
+
+        if not is_subscribed:
+            logger.error(
+                f'Failed to subscribe to {self.mac} on {BEDJET_SUBSCRIPTION_UUID} after {max_retries} attempts.')
+            raise Exception(
+                f'Failed to subscribe to {self.mac} on {BEDJET_SUBSCRIPTION_UUID} after {max_retries} attempts.')
 
     async def send_command(self, command):
         if self.is_connected:

@@ -39,7 +39,7 @@ async def connect_bedjets():
         bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
         bedjets[mac] = bedjet
 
-        await bedjet.connect()
+        await bedjet.connect_and_subscribe()
 
     return bedjets
 
