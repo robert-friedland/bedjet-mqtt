@@ -1,4 +1,3 @@
-import string
 from bleak import BleakClient, BleakError
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
