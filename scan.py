@@ -7,6 +7,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 async def main():
     devices = await BleakScanner.discover()
-    logging.info(devices)
+    for device in devices:
+        logging.info(f'{device.address}: {device.name}')
 
 asyncio.run(main())
