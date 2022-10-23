@@ -21,7 +21,10 @@ async def run(bedjets):
                 mac = splittopic[1]
                 command_type = splittopic[2]
                 command_value = message.payload.decode()
-                bedjet = bedjets[mac]
+                bedjet = bedjets.get(mac)
+
+                if not bedjet:
+                    continue
 
                 if command_type == 'hvac-mode':
                     await bedjet.set_hvac_mode(command_value)

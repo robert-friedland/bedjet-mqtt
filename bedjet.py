@@ -34,29 +34,21 @@ class BedJet():
     @staticmethod
     async def discover():
         devices = await BleakScanner.discover()
-        bedjet_macs = [
-            device.address.lower() for device in devices if device.name == 'BEDJET_V3']
-        return [BedJet(mac) for mac in bedjet_macs]
+        bedjet_devices = [
+            device for device in devices if device.name == 'BEDJET_V3']
+        return [BedJet(device) for device in bedjet_devices]
 
-    def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
-        self._mac = mac
+    def __init__(self, device, mqtt_client=None, mqtt_topic=None):
+        self._mac = device.address.lower()
 
         self._state: BedJetState = BedJetState()
 
         self._client = BleakClient(
-            mac, disconnected_callback=self.on_disconnect)
+            device, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
         self.mqtt_topic = mqtt_topic
 
-        self.current_temperature = None
-        self.target_temperature = None
-        self.hvac_mode = None
-        self.preset_mode = None
-        self.time = None
-        self.timestring = None
-        self.fan_pct = None
-        self.last_seen = None
-        self.is_connected = False
+        self.is_connected = BleakClient.is_connected
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
@@ -205,13 +197,18 @@ class BedJet():
 
     async def connect(self, max_retries=10):
         reconnect_interval = 3
+
+        if self.client.is_connected:
+            self.is_connected = self.client.is_connected
+            logger.info(f'Already connected to {self.mac}.')
+            return
+
         for i in range(0, max_retries):
             try:
                 logger.info(f'Attempting to connect to {self.mac}.')
                 await self.client.connect()
-                self.is_connected = True
-                logger.info(f'Connected to {self.mac}.')
-                break
+                self.is_connected = self.client.is_connected
+
             except BleakError as error:
                 backoff_seconds = (i+1) * reconnect_interval
                 logger.error(
@@ -223,6 +220,10 @@ class BedJet():
                 except BleakError as error:
                     logger.error(f'Error "{error}".')
                 await asyncio.sleep(backoff_seconds)
+
+            if self.is_connected:
+                logger.info(f'Connected to {self.mac}.')
+                return
 
         if not self.is_connected:
             logger.error(
@@ -301,6 +302,9 @@ class BedJet():
     async def subscribe(self, max_retries=10):
         reconnect_interval = 3
         is_subscribed = False
+        if not self.client.is_connected:
+            await self.connect()
+
         for i in range(0, max_retries):
             try:
                 logger.info(
