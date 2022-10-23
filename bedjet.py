@@ -1,4 +1,4 @@
-from bleak import BleakClient, BleakError
+from bleak import BleakClient, BleakError, BleakScanner
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
 import asyncio
@@ -31,6 +31,13 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
+    @staticmethod
+    async def discover():
+        devices = await BleakScanner.discover()
+        bedjet_macs = [
+            device.address for device in devices if device.name == 'BEDJET_V3']
+        return [BedJet(mac) for mac in bedjet_macs]
+
     def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
         self._mac = mac
 
@@ -39,7 +46,7 @@ class BedJet():
         self._client = BleakClient(
             mac, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
-        self._mqtt_topic = mqtt_topic
+        self.mqtt_topic = mqtt_topic
 
         self.current_temperature = None
         self.target_temperature = None
@@ -179,6 +186,10 @@ class BedJet():
     def mqtt_client(self, value):
         self._mqtt_client = value
         self.publish_all_attributes()
+
+    @mqtt_topic.setter
+    def mqtt_topic(self, value):
+        self._mqtt_topic = value
 
     def publish_all_attributes(self):
         for attr in self.state.keys():

@@ -1,6 +1,6 @@
 from asyncio_mqtt import Client, MqttError
 from bedjet import BedJet
-from config import MQTT, MAC_ADDRESSES
+from config import MQTT
 import asyncio
 import logging
 
@@ -35,10 +35,10 @@ async def run(bedjets):
 
 async def connect_bedjets():
     bedjets = {}
-    for mac in MAC_ADDRESSES:
-        bedjet = BedJet(mac, mqtt_topic=f'bedjet/{mac}')
-        bedjets[mac] = bedjet
-
+    bedjet_arr = await BedJet.discover()
+    for bedjet in bedjet_arr:
+        bedjets[bedjet.mac] = bedjet
+        bedjet.mqtt_topic = f'bedjet/{bedjet.mac}'
         await bedjet.connect_and_subscribe()
 
     return bedjets
