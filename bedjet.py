@@ -35,7 +35,7 @@ class BedJet():
     async def discover():
         devices = await BleakScanner.discover()
         bedjet_macs = [
-            device.address for device in devices if device.name == 'BEDJET_V3']
+            device.address.lower() for device in devices if device.name == 'BEDJET_V3']
         return [BedJet(mac) for mac in bedjet_macs]
 
     def __init__(self, mac, mqtt_client=None, mqtt_topic=None):
