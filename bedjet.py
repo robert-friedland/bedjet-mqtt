@@ -4,6 +4,7 @@ from datetime import datetime
 import asyncio
 from typing import TypedDict, Union
 import logging
+import json
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -71,7 +72,7 @@ class BedJet():
             "availability_topic": f"{self.mqtt_topic}/available/state"
         } if self.mqtt_topic else {}
         asyncio.create_task(self.publish_mqtt(
-            f'homeassistant/climate/{self.unique_id}/config', config))
+            f'homeassistant/climate/{self.unique_id}/config', json.dumps(config)))
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
