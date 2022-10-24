@@ -69,7 +69,7 @@ class BedJet():
             "fan_mode_command_topic": f"{self.mqtt_topic}/fan-mode/set",
             "fan_mode_state_topic": f"{self.mqtt_topic}/fan-mode/state",
             "availability_topic": f"{self.mqtt_topic}/available/state"
-        }
+        } if self.mqtt_topic else {}
         asyncio.create_task(self.publish_mqtt(
             f'homeassistant/climate/{self.unique_id}/config', config))
 
