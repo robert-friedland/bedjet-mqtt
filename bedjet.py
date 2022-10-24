@@ -50,6 +50,28 @@ class BedJet():
 
         self.is_connected = BleakClient.is_connected
 
+    def publish_config(self):
+        config = {
+            "name": self.name,
+            "unique_id": self.unique_id,
+            "modes": ["off", "cool", "heat", "dry"],
+            "preset_modes": ["off", "cool", "heat", "dry", "ext_ht", "turbo"],
+            "fan_modes": ["min", "low", "medium", "high", "max"],
+            "min_temp": 66,
+            "max_temp": 109,
+            "mode_command_topic": f"{self.mqtt_topic}/hvac-mode/set",
+            "mode_state_topic": f"{self.mqtt_topic}/hvac-mode/state",
+            "preset_mode_command_topic": f"{self.mqtt_topic}/hvac-mode/set",
+            "preset_mode_state_topic": f"{self.mqtt_topic}/preset-mode/state",
+            "current_temperature_topic": f"{self.mqtt_topic}/current-temperature/state",
+            "temperature_command_topic": f"{self.mqtt_topic}/target-temperature/set",
+            "temperature_state_topic": f"{self.mqtt_topic}/target-temperature/state",
+            "fan_mode_command_topic": f"{self.mqtt_topic}/fan-mode/set",
+            "fan_mode_state_topic": f"{self.mqtt_topic}/fan-mode/state",
+            "availability_topic": f"{self.mqtt_topic}/available/state"
+        }
+        asyncio.create_task(self.publish_mqtt(f'homeassistant/climate/{self.unique_id}/config'))
+
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
 
@@ -69,89 +91,97 @@ class BedJet():
         if isinstance(state, datetime):
             state = state.isoformat()
 
-        asyncio.create_task(self.publish_mqtt(topic, state))
+        asyncio.create_task(self.publish_mqtt_state(topic, state))
 
     @property
+    def name(self):
+        return f'BedJet {self.mac.replace(":", "_")}'
+
+    @property
+    def unique_id(self):
+        return f'bedjet_{self.mac.replace(":","_")}'
+
+    @ property
     def mac(self):
         return self._mac
 
-    @property
+    @ property
     def state(self):
         return self._state
 
-    @property
+    @ property
     def current_temperature(self) -> int:
         return self.state_attr('current_temperature')
 
-    @property
+    @ property
     def target_temperature(self) -> int:
         return self.state_attr('target_temperature')
 
-    @property
+    @ property
     def time(self) -> str:
         return self.state_attr('time')
 
-    @property
+    @ property
     def timestring(self) -> str:
         return self.state_attr('timestring')
 
-    @property
+    @ property
     def fan_pct(self) -> int:
         return self.state_attr('fan_pct')
 
-    @property
+    @ property
     def hvac_mode(self) -> str:
         return self.state_attr('hvac_mode')
 
-    @property
+    @ property
     def preset_mode(self) -> str:
         return self.state_attr('preset_mode')
 
-    @property
+    @ property
     def client(self):
         return self._client
 
-    @property
+    @ property
     def mqtt_client(self):
         return self._mqtt_client
 
-    @property
+    @ property
     def mqtt_topic(self):
         return self._mqtt_topic
 
-    @property
+    @ property
     def fan_mode(self) -> str:
         return self.state_attr('fan_mode')
 
-    @property
+    @ property
     def last_seen(self) -> datetime:
         return self.state_attr('last_seen')
 
-    @property
+    @ property
     def is_connected(self):
         return self.state_attr('available') == 'online'
 
-    @property
+    @ property
     def should_publish_to_mqtt(self):
         return self.mqtt_client and self.mqtt_topic
 
-    @current_temperature.setter
+    @ current_temperature.setter
     def current_temperature(self, value: int):
         self.set_state_attr('current_temperature', value)
 
-    @target_temperature.setter
+    @ target_temperature.setter
     def target_temperature(self, value: int):
         self.set_state_attr('target_temperature', value)
 
-    @time.setter
+    @ time.setter
     def time(self, value: str):
         self.set_state_attr('time', value)
 
-    @timestring.setter
+    @ timestring.setter
     def timestring(self, value: str):
         self.set_state_attr('timestring', value)
 
-    @fan_pct.setter
+    @ fan_pct.setter
     def fan_pct(self, value: int):
         self.set_state_attr('fan_pct', value)
         self.set_state_attr('fan_mode', self.determine_fan_mode(value))
@@ -162,24 +192,25 @@ class BedJet():
             if fan_pct <= pct:
                 return fan_mode
 
-    @hvac_mode.setter
+    @ hvac_mode.setter
     def hvac_mode(self, value: str):
         self.set_state_attr('hvac_mode', value)
 
-    @preset_mode.setter
+    @ preset_mode.setter
     def preset_mode(self, value: str):
         self.set_state_attr('preset_mode', value)
 
-    @client.setter
+    @ client.setter
     def client(self, value):
         self._client = value
 
-    @mqtt_client.setter
+    @ mqtt_client.setter
     def mqtt_client(self, value):
         self._mqtt_client = value
+        self.publish_config()
         self.publish_all_attributes()
 
-    @mqtt_topic.setter
+    @ mqtt_topic.setter
     def mqtt_topic(self, value):
         self._mqtt_topic = value
 
@@ -187,11 +218,11 @@ class BedJet():
         for attr in self.state.keys():
             self.publish_state(attr)
 
-    @last_seen.setter
+    @ last_seen.setter
     def last_seen(self, value: datetime):
         self.set_state_attr('last_seen', value)
 
-    @is_connected.setter
+    @ is_connected.setter
     def is_connected(self, value: bool):
         self.set_state_attr('available', 'online' if value else 'offline')
 
@@ -295,9 +326,12 @@ class BedJet():
         self.preset_mode = get_preset_mode(value)
         self.last_seen = datetime.now()
 
-    async def publish_mqtt(self, attribute, value):
+    async def publish_mqtt_state(self, attribute, value):
         payload = value.encode() if not isinstance(value, int) else value
         await self.mqtt_client.publish(f'{self.mqtt_topic}/{attribute}/state', payload=payload, qos=1, retain=True)
+
+    async def publish_mqtt(self, topic, payload):
+        await self.mqtt_client.publish(topic, payload=payload, qos=1, retain=True)
 
     async def subscribe(self, max_retries=10):
         reconnect_interval = 3
