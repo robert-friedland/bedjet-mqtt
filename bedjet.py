@@ -45,8 +45,8 @@ class BedJet():
 
         self._client = BleakClient(
             device, disconnected_callback=self.on_disconnect)
-        self.mqtt_client = mqtt_client
-        self.mqtt_topic = mqtt_topic
+        self._mqtt_client = mqtt_client
+        self._mqtt_topic = mqtt_topic
 
         self.is_connected = BleakClient.is_connected
 
