@@ -52,8 +52,8 @@ class BedJet():
 
     def publish_config(self):
         config = {
-            "name": self.name,
             "unique_id": self.unique_id,
+            "name": self.name,
             "modes": ["off", "cool", "heat", "dry"],
             "preset_modes": ["off", "cool", "heat", "dry", "ext_ht", "turbo"],
             "fan_modes": ["min", "low", "medium", "high", "max"],
@@ -70,7 +70,8 @@ class BedJet():
             "fan_mode_state_topic": f"{self.mqtt_topic}/fan-mode/state",
             "availability_topic": f"{self.mqtt_topic}/available/state"
         }
-        asyncio.create_task(self.publish_mqtt(f'homeassistant/climate/{self.unique_id}/config'))
+        asyncio.create_task(self.publish_mqtt(
+            f'homeassistant/climate/{self.unique_id}/config', config))
 
     def state_attr(self, attr: str) -> Union[int, str, datetime]:
         return self.state.get(attr)
