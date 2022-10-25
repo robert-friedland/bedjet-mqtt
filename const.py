@@ -15,3 +15,10 @@ BEDJET_COMMANDS = {
     "m2": 0x21,
     "m3": 0x22
 }
+BEDJET_FAN_MODES = {
+    "min": 10,
+    "low": 25,
+    "medium": 50,
+    "high": 75,
+    "max": 100
+}
