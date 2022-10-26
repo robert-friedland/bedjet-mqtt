@@ -165,7 +165,7 @@ class BedJet():
         }
 
     def publish_attribute_to_mqtt(self, attr: Attribute):
-        topic = attr.state_topic
+        topic = attr.state_topic(self.main_mqtt_topic)
         state = self.get_attribute(attr)
 
         if isinstance(state, datetime):
