@@ -289,7 +289,7 @@ class BedJet():
 
     @availability.setter
     def availability(self, value: Availability):
-        self.set_attribute(Availability, value)
+        self.set_attribute(Attribute.AVAILABILITY, value)
 
     async def connect(self, max_retries=10):
         reconnect_interval = 3
