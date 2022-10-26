@@ -130,13 +130,13 @@ class BedJet():
         return [BedJet(device) for device in bedjet_devices]
 
     def __init__(self, device, mqtt_client=None):
+        self._attributes = {}
         self.mac: str = device.address.lower()
 
         self.client: BleakClient = BleakClient(
             device, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
 
-        self._attributes = {}
         self.availability: Availability = Availability.OFFLINE
 
     def publish_config(self):

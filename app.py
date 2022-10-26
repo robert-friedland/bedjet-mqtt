@@ -40,7 +40,6 @@ async def connect_bedjets():
     bedjet_arr = await BedJet.discover()
     for bedjet in bedjet_arr:
         bedjets[bedjet.mac] = bedjet
-        bedjet.mqtt_topic = f'bedjet/{bedjet.mac}'
         await bedjet.connect_and_subscribe()
 
     return bedjets
