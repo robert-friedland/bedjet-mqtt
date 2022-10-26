@@ -11,35 +11,38 @@ async def run(bedjets):
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
-        for mac, bedjet in bedjets.items():
+        for main_mqtt_topic, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
-            async with client.filtered_messages(f'{bedjet.main_mqtt_topic}/+/set') as messages:
-                await client.subscribe(f'{bedjet.main_mqtt_topic}/#')
-                async for message in messages:
-                    splittopic = message.topic.split('/')
-                    attribute_name = splittopic[len(splittopic) - 1]
-                    attribute = Attribute(attribute_name)
-                    command_value = message.payload.decode()
+        async with client.filtered_messages(f'{bedjet.main_mqtt_topic}/+/set') as messages:
+            await client.subscribe(f'{bedjet.main_mqtt_topic}/#')
+            async for message in messages:
+                splittopic = message.topic.split('/')
+                attribute_name = splittopic[len(splittopic) - 1]
+                attribute = Attribute(attribute_name)
+                command_value = message.payload.decode()
 
-                    if attribute == Attribute.HVAC_MODE:
-                        await bedjet.set_hvac_mode(HVACMode(command_value))
+                mqtt_topic = '/'.join(splittopic[:2])
+                bedjet = bedjets[mqtt_topic]
 
-                    if attribute == Attribute.PRESET_MODE:
-                        await bedjet.set_preset_mode(PresetMode(command_value))
+                if attribute == Attribute.HVAC_MODE:
+                    await bedjet.set_hvac_mode(HVACMode(command_value))
 
-                    if attribute == Attribute.TARGET_TEMPERATURE:
-                        await bedjet.set_temperature(command_value)
+                if attribute == Attribute.PRESET_MODE:
+                    await bedjet.set_preset_mode(PresetMode(command_value))
 
-                    if attribute == Attribute.FAN_MODE:
-                        await bedjet.set_temperature(command_value)
+                if attribute == Attribute.TARGET_TEMPERATURE:
+                    await bedjet.set_temperature(command_value)
+
+                if attribute == Attribute.FAN_MODE:
+                    await bedjet.set_temperature(command_value)
 
 
 async def connect_bedjets():
     bedjets = {}
     bedjet_arr = await BedJet.discover()
     for bedjet in bedjet_arr:
-        bedjets[bedjet.mac] = bedjet
+        bedjets[bedjet.main_mqtt_topic] = bedjet
         await bedjet.connect_and_subscribe()
 
     return bedjets
