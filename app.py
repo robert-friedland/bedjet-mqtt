@@ -14,8 +14,8 @@ async def run(bedjets):
         for main_mqtt_topic, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
-        async with client.filtered_messages(f'bedjet/#/set') as messages:
-            await client.subscribe(f'bedjet/#')
+        async with client.filtered_messages(f'homeassistant/#/set') as messages:
+            await client.subscribe(f'homeassistant/#')
             async for message in messages:
                 splittopic = message.topic.split('/')
                 attribute_name = splittopic[len(splittopic) - 1]
@@ -24,7 +24,10 @@ async def run(bedjets):
 
                 mqtt_topic = '/'.join(splittopic[:2])
                 logging.info(mqtt_topic)
-                bedjet = bedjets[mqtt_topic]
+                bedjet = bedjets.get(mqtt_topic)
+
+                if not bedjet:
+                    continue
 
                 if attribute == Attribute.HVAC_MODE:
                     await bedjet.set_hvac_mode(HVACMode(command_value))
