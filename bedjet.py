@@ -279,6 +279,7 @@ class BedJet():
         self.publish_all_attributes()
 
     def publish_all_attributes(self):
+        logger.info(self._attributes.keys())
         for attr in self._attributes.keys():
             self.publish_attribute_to_mqtt(attr)
 
