@@ -132,7 +132,7 @@ class BedJet():
     def __init__(self, device, mqtt_client=None):
         self._attributes = {}
         self.mac = device.address.lower()
-        self.mqtt_client = mqtt_client
+        self._mqtt_client = mqtt_client
         self.availability: Availability = Availability.OFFLINE
 
         self.client = BleakClient(
