@@ -79,7 +79,7 @@ class FanMode(Enum):
         return self._value_[1]
 
     @staticmethod
-    def lookup_by_percentage(fan_pct: int | None):
+    def lookup_by_percentage(fan_pct: int):
         if not fan_pct:
             return None
 
@@ -137,13 +137,13 @@ class BedJet():
         self.mqtt_client = mqtt_client
 
         self.is_available: Availability = Availability.OFFLINE
-        self.current_temperature: int | None = None
-        self.target_temperature: int | None = None
-        self.hvac_mode: HVACMode | None = None
-        self.preset_mode: PresetMode | None = None
-        self.fan_mode: FanMode | None = None
-        self.last_seen: datetime | None = None
-        self.fan_pct: int | None = None
+        self.current_temperature: int = None
+        self.target_temperature: int = None
+        self.hvac_mode: HVACMode = None
+        self.preset_mode: PresetMode = None
+        self.fan_mode: FanMode = None
+        self.last_seen: datetime = None
+        self.fan_pct: int = None
 
     def publish_config(self):
         asyncio.create_task(self.publish_mqtt(
