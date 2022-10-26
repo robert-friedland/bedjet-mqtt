@@ -14,8 +14,8 @@ async def run(bedjets):
         for main_mqtt_topic, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
-        async with client.filtered_messages(f'{bedjet.main_mqtt_topic}/+/set') as messages:
-            await client.subscribe(f'{bedjet.main_mqtt_topic}/#')
+        async with client.filtered_messages(f'bedjet/#/set') as messages:
+            await client.subscribe(f'bedjet/#')
             async for message in messages:
                 splittopic = message.topic.split('/')
                 attribute_name = splittopic[len(splittopic) - 1]
@@ -23,6 +23,7 @@ async def run(bedjets):
                 command_value = message.payload.decode()
 
                 mqtt_topic = '/'.join(splittopic[:2])
+                logging.info(mqtt_topic)
                 bedjet = bedjets[mqtt_topic]
 
                 if attribute == Attribute.HVAC_MODE:
