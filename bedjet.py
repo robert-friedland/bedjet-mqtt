@@ -136,8 +136,8 @@ class BedJet():
             device, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
 
-        self.availability: Availability = Availability.OFFLINE
         self._attributes = {}
+        self.availability: Availability = Availability.OFFLINE
 
     def publish_config(self):
         asyncio.create_task(self.publish_mqtt(
