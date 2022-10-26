@@ -165,8 +165,7 @@ class BedJet():
         }
 
     def publish_attribute_to_mqtt(self, attr: Attribute):
-        logger.info(attr)
-        topic = attr.value
+        topic = attr.state_topic
         state = self.get_attribute(attr)
 
         if isinstance(state, datetime):
@@ -246,8 +245,8 @@ class BedJet():
 
         self._attributes[attr] = value
 
-        # if self.should_publish_to_mqtt:
-        #     self.publish_attribute_to_mqtt(attr)
+        if self.should_publish_to_mqtt:
+            self.publish_attribute_to_mqtt(attr)
 
     @current_temperature.setter
     def current_temperature(self, value: int):
