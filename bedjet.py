@@ -129,10 +129,10 @@ class BedJet():
             device for device in devices if device.name == 'BEDJET_V3']
         return [BedJet(device) for device in bedjet_devices]
 
-    def __init__(self, device, mqtt_client=None):
+    def __init__(self, device):
         self._attributes = {}
         self.mac = device.address.lower()
-        self._mqtt_client = mqtt_client
+        self._mqtt_client = None
         self.availability: Availability = Availability.OFFLINE
 
         self.client = BleakClient(
@@ -176,59 +176,59 @@ class BedJet():
 
         asyncio.create_task(self.publish_mqtt(topic, state))
 
-    @ property
+    @property
     def name(self):
         return f'BedJet {self.mac.replace(":", "_")}'
 
-    @ property
+    @property
     def unique_id(self):
         return f'bedjet_{self.mac.replace(":", "_")}'
 
-    @ property
+    @property
     def main_mqtt_topic(self):
         return f'bedjet/climate/{self.unique_id}'
 
-    @ property
+    @property
     def current_temperature(self) -> int:
         return self.get_attribute(Attribute.CURRENT_TEMPERATURE)
 
-    @ property
+    @property
     def target_temperature(self) -> int:
         return self.get_attribute(Attribute.TARGET_TEMPERATURE)
 
-    @ property
+    @property
     def hvac_mode(self) -> HVACMode:
         return self.get_attribute(Attribute.HVAC_MODE)
 
-    @ property
+    @property
     def preset_mode(self) -> PresetMode:
         return self.get_attribute(Attribute.PRESET_MODE)
 
-    @ property
+    @property
     def fan_mode(self) -> FanMode:
         return self.get_attribute(Attribute.FAN_MODE)
 
-    @ property
+    @property
     def fan_pct(self) -> int:
         return self._fan_pct
 
-    @ property
+    @property
     def last_seen(self) -> datetime:
         return self.get_attribute(Attribute.LAST_SEEN)
 
-    @ property
+    @property
     def availability(self) -> Availability:
         return self.get_attribute(Attribute.AVAILABILITY)
 
-    @ availability.setter
+    @availability.setter
     def availability(self, value: Availability):
         self.set_attribute(Attribute.AVAILABILITY, value)
 
-    @ property
+    @property
     def mqtt_client(self):
         return self._mqtt_client
 
-    @ property
+    @property
     def should_publish_to_mqtt(self):
         return self.mqtt_client
 
@@ -245,29 +245,29 @@ class BedJet():
         if self.should_publish_to_mqtt:
             self.publish_attribute_to_mqtt(attr)
 
-    @ current_temperature.setter
+    @current_temperature.setter
     def current_temperature(self, value: int):
         self.set_attribute(Attribute.CURRENT_TEMPERATURE, value)
 
-    @ target_temperature.setter
+    @target_temperature.setter
     def target_temperature(self, value: int):
         self.set_attribute(Attribute.TARGET_TEMPERATURE, value)
 
-    @ fan_pct.setter
+    @fan_pct.setter
     def fan_pct(self, value: int):
         self._fan_pct = value
         self.set_attribute(Attribute.FAN_MODE, FanMode.lookup_by_percentage(
             value))
 
-    @ hvac_mode.setter
+    @hvac_mode.setter
     def hvac_mode(self, value: HVACMode):
         self.set_attribute(Attribute.HVAC_MODE, value)
 
-    @ preset_mode.setter
+    @preset_mode.setter
     def preset_mode(self, value: PresetMode):
         self.set_attribute(Attribute.PRESET_MODE, value)
 
-    @ mqtt_client.setter
+    @mqtt_client.setter
     def mqtt_client(self, value):
         self._mqtt_client = value
         logger.info(self._mqtt_client)
@@ -279,11 +279,11 @@ class BedJet():
         for attr in self._attributes.keys():
             self.publish_attribute_to_mqtt(attr)
 
-    @ last_seen.setter
+    @last_seen.setter
     def last_seen(self, value: datetime):
         self.set_attribute(Attribute.LAST_SEEN, value)
 
-    @ availability.setter
+    @availability.setter
     def availability(self, value: Availability):
         self.set_attribute(Availability, value)
 
