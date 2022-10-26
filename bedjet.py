@@ -274,7 +274,7 @@ class BedJet():
         self._mqtt_client = value
 
         self.publish_config()
-        self.publish_all_attributes()
+        # self.publish_all_attributes()
 
     def publish_all_attributes(self):
         for attr in self._attributes.keys():
