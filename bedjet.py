@@ -416,7 +416,7 @@ class BedJet():
         if self.is_connected:
             return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
-    async def set_mode(self, mode: HVACMode | PresetMode):
+    async def set_mode(self, mode):
         return await self.send_command([0x01, mode.command])
 
     async def set_time(self, minutes):
