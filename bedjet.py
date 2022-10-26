@@ -230,7 +230,7 @@ class BedJet():
 
     @property
     def should_publish_to_mqtt(self):
-        return self.mqtt_client
+        return self.mqtt_client is not None
 
     def get_attribute(self, attr: Attribute):
         return self._attributes.get(attr)
