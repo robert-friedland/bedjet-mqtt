@@ -17,6 +17,7 @@ async def run(bedjets):
         async with client.filtered_messages(f'homeassistant/climate/+/+/set') as messages:
             await client.subscribe(f'homeassistant/#')
             async for message in messages:
+                logging.info(message.topic)
                 splittopic = message.topic.split('/')
                 attribute_name = splittopic[len(splittopic) - 1]
                 attribute = Attribute(attribute_name)
