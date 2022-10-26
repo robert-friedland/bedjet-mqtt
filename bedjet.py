@@ -174,6 +174,9 @@ class BedJet():
         elif isinstance(state, Enum):
             state = state.value
 
+        logger.info(topic)
+        logger.info(state)
+
         asyncio.create_task(self.publish_mqtt(topic, state))
 
     @property
@@ -242,8 +245,6 @@ class BedJet():
 
         self._attributes[attr] = value
 
-        logger.info(self._attributes)
-
         # if self.should_publish_to_mqtt:
         #     self.publish_attribute_to_mqtt(attr)
 
@@ -274,7 +275,7 @@ class BedJet():
         self._mqtt_client = value
 
         self.publish_config()
-        # self.publish_all_attributes()
+        self.publish_all_attributes()
 
     def publish_all_attributes(self):
         for attr in self._attributes.keys():
