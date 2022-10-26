@@ -136,7 +136,7 @@ class BedJet():
             device, disconnected_callback=self.on_disconnect)
         self.mqtt_client = mqtt_client
 
-        self.is_available: Availability = Availability.OFFLINE
+        self.availability: Availability = Availability.OFFLINE
         self.current_temperature: int = None
         self.target_temperature: int = None
         self.hvac_mode: HVACMode = None
@@ -227,13 +227,13 @@ class BedJet():
     def availability(self) -> Availability:
         return self.get_attribute(Attribute.AVAILABILITY)
 
+    @ availability.setter
+    def availability(self, value: Availability):
+        self.set_attribute(Attribute.AVAILABILITY, value)
+
     @ property
     def mqtt_client(self):
         return self._mqtt_client
-
-    @ is_available.setter
-    def is_available(self, value: Availability):
-        self.set_attribute(Attribute.AVAILABILITY, value)
 
     @ property
     def should_publish_to_mqtt(self):
