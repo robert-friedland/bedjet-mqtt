@@ -242,8 +242,10 @@ class BedJet():
 
         self._attributes[attr] = value
 
-        if self.should_publish_to_mqtt:
-            self.publish_attribute_to_mqtt(attr)
+        logger.info(self._attributes)
+
+        # if self.should_publish_to_mqtt:
+        #     self.publish_attribute_to_mqtt(attr)
 
     @current_temperature.setter
     def current_temperature(self, value: int):

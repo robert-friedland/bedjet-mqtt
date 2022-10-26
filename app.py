@@ -11,12 +11,11 @@ async def run(bedjets):
         username=MQTT['username'],
         password=MQTT['password']
     ) as client:
-        await client.subscribe(f'bedjet/#')
-
         for main_mqtt_topic, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
         async with client.filtered_messages(f'bedjet/#/set') as messages:
+            await client.subscribe(f'bedjet/#')
             async for message in messages:
                 splittopic = message.topic.split('/')
                 attribute_name = splittopic[len(splittopic) - 1]
