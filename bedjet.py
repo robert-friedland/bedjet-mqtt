@@ -165,6 +165,7 @@ class BedJet():
         }
 
     def publish_attribute_to_mqtt(self, attr: Attribute):
+        logger.info(attr)
         topic = attr.value
         state = self.get_attribute(attr)
 
