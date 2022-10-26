@@ -174,9 +174,6 @@ class BedJet():
         elif isinstance(state, Enum):
             state = state.value
 
-        logger.info(topic)
-        logger.info(state)
-
         asyncio.create_task(self.publish_mqtt(topic, state))
 
     @property
@@ -189,7 +186,7 @@ class BedJet():
 
     @property
     def main_mqtt_topic(self):
-        return f'bedjet/climate/{self.unique_id}'
+        return f'homeassistant/climate/{self.unique_id}'
 
     @property
     def current_temperature(self) -> int:
@@ -278,7 +275,6 @@ class BedJet():
         self.publish_all_attributes()
 
     def publish_all_attributes(self):
-        logger.info(self._attributes.keys())
         for attr in self._attributes.keys():
             self.publish_attribute_to_mqtt(attr)
 
