@@ -1,5 +1,5 @@
 from asyncio_mqtt import Client, MqttError
-from bedjet import BedJet
+from bedjet import BedJet, Attribute, HVACMode, PresetMode, FanMode
 from config import MQTT
 import asyncio
 import logging
@@ -14,26 +14,25 @@ async def run(bedjets):
         for mac, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
-        async with client.filtered_messages('bedjet/+/+/set') as messages:
-            await client.subscribe('bedjet/#')
-            async for message in messages:
-                splittopic = message.topic.split('/')
-                mac = splittopic[1]
-                command_type = splittopic[2]
-                command_value = message.payload.decode()
-                bedjet = bedjets.get(mac)
+            async with client.filtered_messages(f'{bedjet.main_mqtt_topic}/+/set') as messages:
+                await client.subscribe(f'{bedjet.main_mqtt_topic}/#')
+                async for message in messages:
+                    splittopic = message.topic.split('/')
+                    attribute_name = splittopic[len(splittopic) - 1]
+                    attribute = Attribute(attribute_name)
+                    command_value = message.payload.decode()
 
-                if not bedjet:
-                    continue
+                    if attribute == Attribute.HVAC_MODE:
+                        await bedjet.set_hvac_mode(HVACMode(command_value))
 
-                if command_type == 'hvac-mode':
-                    await bedjet.set_hvac_mode(command_value)
+                    if attribute == Attribute.PRESET_MODE:
+                        await bedjet.set_preset_mode(PresetMode(command_value))
 
-                if command_type == 'target-temperature':
-                    await bedjet.set_temperature(command_value)
+                    if attribute == Attribute.TARGET_TEMPERATURE:
+                        await bedjet.set_temperature(command_value)
 
-                if command_type == 'fan-mode':
-                    await bedjet.set_fan_mode(command_value)
+                    if attribute == Attribute.FAN_MODE:
+                        await bedjet.set_temperature(command_value)
 
 
 async def connect_bedjets():
