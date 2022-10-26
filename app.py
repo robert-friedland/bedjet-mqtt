@@ -14,7 +14,7 @@ async def run(bedjets):
         for main_mqtt_topic, bedjet in bedjets.items():
             bedjet.mqtt_client = client
 
-        async with client.filtered_messages(f'homeassistant/#/set') as messages:
+        async with client.filtered_messages(f'homeassistant/climate/+/+/set') as messages:
             await client.subscribe(f'homeassistant/#')
             async for message in messages:
                 splittopic = message.topic.split('/')
