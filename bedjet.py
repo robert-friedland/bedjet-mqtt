@@ -137,13 +137,7 @@ class BedJet():
         self.mqtt_client = mqtt_client
 
         self.availability: Availability = Availability.OFFLINE
-        self.current_temperature: int = None
-        self.target_temperature: int = None
-        self.hvac_mode: HVACMode = None
-        self.preset_mode: PresetMode = None
-        self.fan_mode: FanMode = None
-        self.last_seen: datetime = None
-        self.fan_pct: int = None
+        self._attributes = {}
 
     def publish_config(self):
         asyncio.create_task(self.publish_mqtt(
