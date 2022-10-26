@@ -270,6 +270,8 @@ class BedJet():
     @ mqtt_client.setter
     def mqtt_client(self, value):
         self._mqtt_client = value
+        logger.info(self._mqtt_client)
+
         self.publish_config()
         self.publish_all_attributes()
 
