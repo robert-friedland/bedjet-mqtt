@@ -131,13 +131,12 @@ class BedJet():
 
     def __init__(self, device, mqtt_client=None):
         self._attributes = {}
-        self.mac: str = device.address.lower()
-
-        self.client: BleakClient = BleakClient(
-            device, disconnected_callback=self.on_disconnect)
+        self.mac = device.address.lower()
         self.mqtt_client = mqtt_client
-
         self.availability: Availability = Availability.OFFLINE
+
+        self.client = BleakClient(
+            device, disconnected_callback=self.on_disconnect)
 
     def publish_config(self):
         asyncio.create_task(self.publish_mqtt(
@@ -387,7 +386,7 @@ class BedJet():
             try:
                 logger.info(
                     f'Attempting to subscribe to notifications from {self.mac} on {BEDJET_SUBSCRIPTION_UUID}.')
-                await self._client.start_notify(
+                await self.client.start_notify(
                     BEDJET_SUBSCRIPTION_UUID, callback=self.handle_data)
                 is_subscribed = True
                 logger.info(
@@ -408,7 +407,7 @@ class BedJet():
 
     async def send_command(self, command):
         if self.is_connected:
-            return await self._client.write_gatt_char(BEDJET_COMMAND_UUID, command)
+            return await self.client.write_gatt_char(BEDJET_COMMAND_UUID, command)
 
     async def set_mode(self, mode):
         return await self.send_command([0x01, mode.command])
