@@ -41,3 +41,13 @@ No test suite. Test on the Pi by running `diagnose.py` (stop the service first) 
 ## Workflow — MANDATORY
 
 **ALL changes MUST be made in a git worktree branched off the latest `main`.** Never commit directly to `main`. This is non-negotiable. When using the Agent tool, always set `isolation: "worktree"`. When working manually, create a worktree first. No exceptions.
+
+## Review process — MANDATORY for non-trivial changes
+
+Changes that only touch comments, typos, or a single config line can proceed directly. For anything that touches logic, control flow, or multiple files:
+
+1. **Plan first.** Enter plan mode and draft the proposed changes before writing any code.
+2. **Parallel review.** Send the plan to at least two review agents simultaneously. Reviewers assess correctness, side effects, and adherence to patterns in this file.
+3. **Iterate.** Revise the plan based on reviewer feedback. Address concerns in the plan, not in code.
+4. **Re-review until consensus.** Re-send the revised plan to reviewers. Max two revision rounds — if reviewers still disagree, surface to the user for a decision.
+5. **Execute.** Only after consensus (or user approval), implement the changes in a new worktree branched off main.
