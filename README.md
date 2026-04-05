@@ -55,6 +55,27 @@ sensor:
       value_template: "{{ value_json.bedjets_connected }}"
 ```
 
+### Auto-update (optional)
+
+`update.sh` can automatically pull the latest code from main and restart the service. Set it up with cron:
+
+1. Allow passwordless sudo for service restart:
+
+```bash
+sudo bash -c 'echo "pi ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart bedjet" > /etc/sudoers.d/bedjet-update'
+sudo chmod 440 /etc/sudoers.d/bedjet-update
+```
+
+2. Ensure git can pull without a password prompt (SSH key with no passphrase).
+
+3. Add a cron job (checks every 15 minutes):
+
+```bash
+crontab -e
+# Add:
+*/15 * * * * /home/pi/bedjet-mqtt/update.sh >> /var/log/bedjet-update.log 2>&1
+```
+
 ## Diagnostics
 
 Run `diagnose.py` on the Pi to independently test MQTT and BLE connectivity:
