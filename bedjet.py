@@ -2,6 +2,7 @@ from bleak import BleakClient, BleakError, BleakScanner
 from const import BEDJET_COMMAND_UUID, BEDJET_SUBSCRIPTION_UUID, BEDJET_COMMANDS, BEDJET_FAN_MODES
 from datetime import datetime
 import asyncio
+import time
 from typing import TypedDict, Union
 import logging
 import json
@@ -32,6 +33,50 @@ class BedJetState(TypedDict):
 
 
 class BedJet():
+    _cache_reset_lock = asyncio.Lock()
+    _cache_reset_in_progress = False
+    _last_cache_reset = 0
+    CACHE_RESET_COOLDOWN = 300
+
+    @classmethod
+    async def reset_bluetooth_cache(cls):
+        now = time.monotonic()
+        if now - cls._last_cache_reset < cls.CACHE_RESET_COOLDOWN:
+            logger.warning('BlueZ cache reset attempted too recently, skipping.')
+            return False
+
+        async with cls._cache_reset_lock:
+            if time.monotonic() - cls._last_cache_reset < cls.CACHE_RESET_COOLDOWN:
+                return False
+
+            logger.warning('Resetting BlueZ adapter cache...')
+            cls._cache_reset_in_progress = True
+            try:
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        'sudo', '/home/pi/bedjet-mqtt/reset_bluetooth.sh',
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+                except asyncio.TimeoutError:
+                    proc.kill()
+                    logger.error('BlueZ cache reset timed out.')
+                    return False
+                except OSError as e:
+                    logger.error(f'Could not run cache reset script: {e}')
+                    return False
+
+                if proc.returncode == 0:
+                    cls._last_cache_reset = time.monotonic()
+                    logger.info('BlueZ adapter cache cleared successfully.')
+                    return True
+                else:
+                    logger.error(f'Failed to reset BlueZ cache: {stderr.decode()}')
+                    return False
+            finally:
+                cls._cache_reset_in_progress = False
+
     @staticmethod
     async def discover():
         devices = await BleakScanner.discover()
@@ -228,6 +273,39 @@ class BedJet():
     def is_connected(self, value: bool):
         self.set_state_attr('available', 'online' if value else 'offline')
 
+    async def _attempt_cache_reset_and_reconnect(self):
+        self.is_connected = False
+
+        success = await BedJet.reset_bluetooth_cache()
+        if not success:
+            logger.error(f'Cache reset failed or on cooldown for {self.mac}.')
+            return False
+
+        try:
+            device = await BleakScanner.find_device_by_address(self.mac, timeout=15)
+            if device is None:
+                logger.error(f'Could not rediscover {self.mac} after cache reset.')
+                return False
+
+            try:
+                await self._client.disconnect()
+            except Exception:
+                pass
+
+            self._client = BleakClient(device, disconnected_callback=self.on_disconnect)
+            await self.client.connect()
+            self.is_connected = self.client.is_connected
+
+            if self.is_connected and list(self.client.services):
+                logger.info(f'Reconnected to {self.mac} after cache reset.')
+                return True
+            else:
+                logger.error(f'Reconnected to {self.mac} but services still empty.')
+                return False
+        except Exception as e:
+            logger.error(f'Recovery reconnect failed for {self.mac}: {e}')
+            return False
+
     async def connect(self, max_retries=10):
         reconnect_interval = 3
 
@@ -255,6 +333,12 @@ class BedJet():
                 await asyncio.sleep(backoff_seconds)
 
             if self.is_connected:
+                if not list(self.client.services):
+                    logger.warning(f'Connected to {self.mac} but no GATT services — cache corruption.')
+                    success = await self._attempt_cache_reset_and_reconnect()
+                    if not success:
+                        self.is_connected = False
+                        raise Exception(f'GATT cache corruption for {self.mac} and reset failed.')
                 logger.info(f'Connected to {self.mac}.')
                 return
 
@@ -271,6 +355,8 @@ class BedJet():
     def on_disconnect(self, client):
         if getattr(self, '_intentional_disconnect', False):
             self._intentional_disconnect = False
+            return
+        if BedJet._cache_reset_in_progress:
             return
         self.is_connected = False
         logger.warning(f'Disconnected from {self.mac}.')
@@ -341,6 +427,7 @@ class BedJet():
     async def subscribe(self, max_retries=10):
         reconnect_interval = 3
         is_subscribed = False
+        cache_reset_attempted = False
         if not self.client.is_connected:
             await self.connect()
 
@@ -356,6 +443,14 @@ class BedJet():
                 break
             except BleakError as error:
                 backoff_seconds = (i+1) * reconnect_interval
+
+                if 'could not be found' in str(error) and not cache_reset_attempted:
+                    cache_reset_attempted = True
+                    logger.warning(f'Characteristic not found — attempting cache reset.')
+                    success = await self._attempt_cache_reset_and_reconnect()
+                    if success:
+                        continue
+
                 logger.error(
                     f'Error "{error}". Retrying in {backoff_seconds} seconds.')
 
