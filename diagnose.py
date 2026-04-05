@@ -129,8 +129,7 @@ async def check_ble_connection(device):
     print(f"  NOTE: Ensure the BedJet is powered on and actively running (not standby).")
     received = []
 
-    # 2-arg signature is correct for bleak <= 0.17 (the version confirmed on this Pi)
-    def on_notify(handle, value):
+    def on_notify(characteristic, value):
         received.append(value)
 
     try:

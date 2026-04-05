@@ -269,15 +269,18 @@ class BedJet():
         await self.subscribe(max_retries)
 
     def on_disconnect(self, client):
+        if getattr(self, '_intentional_disconnect', False):
+            self._intentional_disconnect = False
+            return
         self.is_connected = False
         logger.warning(f'Disconnected from {self.mac}.')
         asyncio.create_task(self.connect_and_subscribe())
 
     async def disconnect(self):
-        self.client.set_disconnected_callback(None)
+        self._intentional_disconnect = True
         await self.client.disconnect()
 
-    def handle_data(self, handle, value):
+    def handle_data(self, characteristic, value):
         def get_current_temperature(value):
             return round(((int(value[7]) - 0x26) + 66) - ((int(value[7]) - 0x26) / 9))
 
