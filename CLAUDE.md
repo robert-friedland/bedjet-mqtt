@@ -37,3 +37,7 @@ Python service that bridges BedJet V3 devices over Bluetooth Low Energy (BLE) to
 ## Testing
 
 No test suite. Test on the Pi by running `diagnose.py` (stop the service first) or by watching logs during operation.
+
+## Workflow — MANDATORY
+
+**ALL changes MUST be made in a git worktree branched off the latest `main`.** Never commit directly to `main`. This is non-negotiable. When using the Agent tool, always set `isolation: "worktree"`. When working manually, create a worktree first. No exceptions.
